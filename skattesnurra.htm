@@ -1,0 +1,722 @@
+<h1 style="text-align: left;">Räkna ut din inkomstskatt</h1>
+<p>Sverige har idag bland världens högsta skatter på arbete. Men bara en av tio svenskar vet hur mycket han eller hon betalar i skatt. Det vill vi råda bot på.</p>
+<p>Här kan du lägga in din egen månadsinkomst och hemkommun för att se hur mycket skatt du faktiskt betalar i inkomstskatt.</p>
+                                    </div>
+            </div>
+                        <div class="col-lg-6">
+                <div class="image-text__img">
+                    <img src="https://skattebetalarna.se/wp-content/uploads/2019/04/depositphotos_161657762_xl-2015.jpg" alt="" />
+                    <span class="img-credit"></span>
+                </div>
+            </div>
+                    </div>
+    </div>
+</section>
+<section class="tax-calc" id="din-Skatt-Section">
+
+<script>
+
+// (c) Jacob Lundberg 2013-2022, update Erik Bengtzboe 2024-2026
+
+PBB = 59200 // prisbasbelopp 2026
+skatt = 0
+grundavdrag = 0
+JSA = 0 // jobbskatteavdrag
+arslon = 0
+lonefterskatt = 0
+skattutanjsa = 0
+statsskatt = 0
+AGA = 0.3142 // arbetsgivaravgift
+
+function laddasidan() {
+currentURL = new URL(window.location.href)
+
+if(currentURL.searchParams.has('manadslon'))
+{
+	startlon = currentURL.searchParams.get('manadslon')
+	if(!isNaN(startlon) && startlon > 0) {
+		startlon = Math.round(startlon / 1000) * 1000
+		if(startlon < 100001) {
+			document.form.lon.value = startlon
+			lonvisa.innerHTML = tusental(startlon) + ' kr'
+		} else {
+			document.form.lon.value = 100000
+			lonvisa.innerHTML = '100 000 kr'
+		}
+	}
+}
+
+raknaut(); 
+}
+
+// tusentalsgruppering
+
+function tusental(nStr)
+{
+	nStr += '';
+	x = nStr.split('.');
+	x1 = x[0];
+	x2 = x.length > 1 ? '.' + x[1] : '';
+	var rgx = /(\d+)(\d{3})/;
+	while (rgx.test(x1)) {
+		x1 = x1.replace(rgx, '$1' + '&nbsp;' + '$2');
+	}
+	return x1 + x2;
+}
+
+
+// avrundning och formatering av tal som ska visas
+
+function avrunda(num) {
+num = Math.round(num)
+if(num < 0) {
+num = -num
+negativ = true
+} else {
+negativ = false
+}
+
+num = tusental(num)
+
+if(negativ)
+return '&minus;' + num
+else
+return num
+}
+
+
+// funktion som körs när formuläret ändras eller skickas
+
+function raknaut() {
+arslon = document.form.lon.value * 12
+kommunskatt = document.form.kommun.value / 100
+// procentmat = document.form.procentmat.value / 100
+// procentbocker = document.form.procentbocker.value / 100
+// procentannat = document.form.procentannat.value / 100
+// ungdom = document.form.ungdom.checked
+
+marginalskatt = 0
+
+// grundavdrag
+
+if(arslon > 0 && arslon < 0.99*PBB) {
+grundavdrag = Math.ceil(0.423*PBB/100)*100
+}
+
+else if(arslon >= 0.99*PBB && arslon < 2.72*PBB) {
+grundavdrag = Math.ceil((0.225*PBB+0.2*arslon)/100)*100
+}
+
+else if(arslon >= 2.72*PBB && arslon < 3.11*PBB) {
+grundavdrag = Math.ceil(0.770*PBB/100)*100
+}
+
+else if(arslon >= 3.11*PBB && arslon < 7.88*PBB) {
+grundavdrag = Math.ceil((1.081*PBB-0.1*arslon)/100)*100
+}
+
+else if(arslon >= 7.88*PBB) {
+grundavdrag = Math.ceil(0.293*PBB/100)*100
+}
+
+else {
+resultat.innerHTML = '<p class="inkomst-form-validate">Skriv bara siffror utan mellanslag eller kommatecken.</p>'
+return
+}
+
+
+// jobbskatteavdrag
+
+if(arslon > 0 && arslon < 0.91*PBB) {
+JSA = (arslon - grundavdrag) * kommunskatt
+if(JSA < 0)
+JSA = 0
+}
+
+else if(arslon >= 0.91*PBB && arslon < 3.24*PBB) {
+JSA = (0.91*PBB + 0.3874*(arslon - 0.91*PBB) - grundavdrag)*kommunskatt
+}
+
+else if(arslon >= 3.24*PBB && arslon < 8.08*PBB) {
+JSA = (1.813*PBB + 0.251*(arslon - 3.24*PBB) - grundavdrag)*kommunskatt
+}
+
+else if(arslon >= 8.08*PBB) {
+JSA = (3.027*PBB - grundavdrag)*kommunskatt
+}
+
+skattutanjsa = Math.round((arslon - grundavdrag) * kommunskatt)
+
+if(skattutanjsa < 0)
+skattutanjsa = 0
+
+
+// skattereduktion för förvärvsinkomst
+
+if(arslon - grundavdrag <= 40000) {
+skattereduktionforvarvsinkomst = 0
+} else if(arslon - grundavdrag > 40000 && arslon - grundavdrag <= 240000) {
+skattereduktionforvarvsinkomst = 0.0075 * (arslon - grundavdrag - 40000)
+} else if(arslon - grundavdrag > 240000) {
+skattereduktionforvarvsinkomst = 1500
+}
+
+
+// statlig inkomstskatt 2026
+
+statsskatt = 0
+brytpunkt1 = 660400
+
+if(arslon > brytpunkt1) {
+statsskatt = (arslon - brytpunkt1) * 0.2
+marginalskatt += 0.2
+}
+
+
+
+skatt = Math.round(skattutanjsa - JSA - skattereduktionforvarvsinkomst + statsskatt)
+
+// begravningsavgift 2026 (ej Stockholm och Tranås)
+begravning = 0.00292
+
+// 0.00285 i Tranås
+
+// begravningsavgift i Stockholm
+if(kommunskatt == 0.3055) {
+begravning = 0.0007
+}
+
+begravningsavgift = Math.max(0, (arslon - grundavdrag) * begravning)
+
+
+// allmän pensionsavgift
+
+apa = 0
+
+if(arslon >= Math.ceil(0.423*PBB/100)*100) {
+apa = Math.round((0.07 * Math.floor(arslon/100)*100)/100)*100
+
+if(apa < skatt)
+apa = 0
+else
+apa = apa - skatt
+
+}
+
+// skattereduktion för boende i vissa områden
+let skattereduktionforboendeivissaomraden = 0;
+const formElement = document.querySelector('#myForm');
+
+formElement.addEventListener('submit', (event) => {
+  event.preventDefault();  // Prevent form submission
+
+  const selectElement = document.querySelector('#komm');
+  const selectedText = selectElement.options[selectElement.selectedIndex].text;
+  
+  if (["Avesta", "Gagnef", "Hedemora", "Leksand", "Ludvika", "Malung-Sälen", "Mora", "Orsa", "Rättvik", "Smedjebacken", "Säter", "Vansbro", "Älvdalen", "Bollnäs", "Hudiksvall", "Ljusdal", "Nordanstig", "Ockelbo", "Ovanåker", "Söderhamn", "Berg", "Bräcke", "Härjedalen", "Krokom", "Ragunda", "Strömsund", "Åre", "Östersund", "Arjeplog", "Arvidsjaur", "Boden", "Gällivare", "Haparanda", "Jokkmokk", "Kalix", "Kiruna", "Pajala", "Piteå", "Älvsbyn", "Överkalix", "Övertorneå", "Arvika", "Eda", "Filipstads", "Hagfors", "Munkfors", "Storfors", "Sunne", "Säffle", "Torsby", "Årjäng", "Bjurholm", "Dorotea", "Lycksele", "Malå", "Nordmaling", "Norsjö", "Robertsfors", "Skellefteå", "Sorsele", "Storuman", "Vilhelmina", "Vindeln", "Vännäs", "Åsele", "Härnösand", "Kramfors", "Sollefteå", "Timrå", "Ånge", "Örnsköldsvik", "Bengtsfors", "Dals-Ed", "Färgelanda", "Mellerud", "Åmål"].includes(selectedText)) {
+    skattereduktionforboendeivissaomraden = 1675;
+  } else {
+    skattereduktionforboendeivissaomraden = 0;
+  }
+
+  localStorage.setItem('skattereduktionforboendeivissaomraden', skattereduktionforboendeivissaomraden);
+  document.querySelector('#display').textContent = localStorage.getItem('skattereduktionforboendeivissaomraden');
+});
+
+// console.log(localStorage.getItem('skattereduktionforboendeivissaomraden'));
+
+skattereduktionforboendeivissaomradenFull = localStorage.getItem('skattereduktionforboendeivissaomraden');
+
+skattereduktionforboendeivissaomradenOutput = avrunda(localStorage.getItem('skattereduktionforboendeivissaomraden') / 12);
+
+// console.log(skattereduktionforboendeivissaomradenOutput);
+
+
+// public service-avgift
+
+IBB = 83400 // inkomstbasbeloppet 2026
+
+if(arslon - grundavdrag <= 1.42 * IBB) {
+
+publicservice = 0.01 * (arslon - grundavdrag)
+
+} else if(arslon - grundavdrag > 1.42 * IBB) {
+
+	publicservice = 1184
+}
+
+// räkna samman
+
+// lonefterskatt = Math.round(arslon - skatt - apa - begravningsavgift - publicservice + skattereduktionforboendeivissaomradenOutput)
+lonefterskatt = Math.round(arslon - skatt - apa - begravningsavgift - publicservice + Number(skattereduktionforboendeivissaomradenFull))
+
+// if(ungdom)
+// arbetsgivaravgift = AGAU
+// else
+arbetsgivaravgift = AGA
+
+
+arbetsgivaravgiftperar = arslon * arbetsgivaravgift
+
+totalarslon = arslon + arbetsgivaravgiftperar
+
+// viktadmoms = 0.25 / 1.25 * procentannat + 0.12 / 1.12 * procentmat + 0.06 / 1.06 * procentbocker
+// viktadmoms = 0.2097
+// sänkt matmoms 2026 och 2027 sänker den viktade momsen med 0,7-0,9 procentenheter baserat på Riksbanken och 0,6 baserat på BP26 (beräknat för 2027)
+//viktadmoms = 0.19 normalår
+viktadmoms = 0.184
+
+moms = viktadmoms * lonefterskatt
+
+totalmarginalskatt = (marginalskatt + (1 - marginalskatt) * viktadmoms + arbetsgivaravgift) / (1 + arbetsgivaravgift)
+
+// totalskatt = moms + arbetsgivaravgiftperar + skatt + apa + begravningsavgift + publicservice
+totalskatt = moms + arbetsgivaravgiftperar + skatt + apa + begravningsavgift + publicservice - skattereduktionforboendeivissaomradenOutput
+
+totalsnittskatt = totalskatt / totalarslon
+
+
+// tusenlapparskatt = Math.round(totalskatt / 12 / 1000)
+// tusenlapparkvar = Math.round((lonefterskatt - moms) / 12 / 1000)
+
+// skattefridag = new Date(365 * 24 * 60 * 60 * 1000 * totalsnittskatt) // millisekunder in på 1970 (1970 ej skottår)
+
+// output
+
+
+// banknotetext = '<img src=tusenlapp.jpg width=100 class=tusenlapp> '
+
+skatteuppdelning = '<p>Inklusive arbetsgivaravgifter tjänar du ' + avrunda(totalarslon / 12) + ' kr per månad. Av detta går ' + avrunda(totalskatt / 12) + ' kr (' + Math.round(totalsnittskatt * 100) + '&nbsp;%) i skatt.</p>'
+
+// '<strong>Vem får pengarna?</strong></p><div class="table"><table class="table table-responsive"><tr><td>DU<br><span class="sizeup">' + avrunda((lonefterskatt - moms) / 12) + ' kr</span> (' + Math.round((1 - totalsnittskatt) * 100) + '&nbsp;%)</td><td>STATEN<br><span class="sizeup">' + avrunda(totalskatt / 12) + ' kr</span> (' + Math.round(totalsnittskatt * 100) + '&nbsp;%)</td></tr></div>'
+
+output = ''
+
+// tabell som specificerar inkomst och skatter
+output += '<br/><h2>Dina skatter</h2><div class="skattewrap inner-content"><div class="table"><table class="table table-striped table-skatter"><tr><td><b>Arbetsgivarens kostnad</b></td><td align=right><b>' + avrunda(totalarslon / 12) + '</b></td></tr><tr><td>Arbetsgivaravgifter</td><td align=right>' + avrunda(-arbetsgivaravgiftperar / 12) + '</td></tr>'
+output += '<tr><td><b>Din månadslön</b></td><td align=right><b>' + avrunda(arslon / 12) + '</b></td></tr><tr><td>Kommunalskatt</td><td align=right>' + avrunda(-skattutanjsa / 12) + '</td></tr><tr><td>Jobbskatteavdrag</td><td align=right>' + avrunda(JSA / 12) + '</td></tr>'
+
+// skattereduktion för förvärvsinkomst
+if(skattereduktionforvarvsinkomst > 0)
+output += '<tr><td>Skattereduktion för förvärvsinkomst</td><td align=right>' + avrunda(skattereduktionforvarvsinkomst / 12) + '</td></tr>'
+
+// statlig inkomstskatt
+if(statsskatt > 0)
+output += '<tr><td>Statlig inkomstskatt</td><td align=right>' + avrunda(-statsskatt / 12) + '</td></tr>'
+
+// allmän pensionsavgift
+if(apa > 0)
+output += '<tr><td>Allmän pensionsavgift</td><td align=right>' + avrunda(-apa / 12) + '</td></tr>'
+
+// skattereduktionforboendeivissaomraden
+output += '<tr><td>Skattereduktion för boende i vissa områden</td><td align=right>' + skattereduktionforboendeivissaomradenOutput + '</td></tr>'
+
+// begravningsavgift
+if(begravningsavgift > 0)
+output += '<tr><td>Begravningsavgift</td><td align=right>' + avrunda(-begravningsavgift / 12) + '</td></tr>'
+
+// public service-avgift
+if(publicservice > 0)
+output += '<tr><td>Public service-avgift</td><td align=right>' + avrunda(-publicservice / 12) + '</td></tr>'
+
+output += '<tr><td><b>Lön efter skatt</b></td><td align=right><b>' + avrunda(lonefterskatt / 12) + '</b></td></tr>'
+
+output += '<tr><td>Moms och punktskatter*</td><td align=right>' + avrunda(-moms / 12) + '</td></tr>'
+
+output += '<tr><td><b>Kvar efter alla skatter</b></td><td align=right><b>' + avrunda((lonefterskatt - moms) / 12) + '</b></td></tr>'
+
+output += '<tr><td><font color=red><b>Summa skatter</b></font></td><td align=right><font color=red><b>' + avrunda(-totalskatt / 12) + '</b></font></td></tr></table><p></div>* Beräknat på snittet i befolkningen.'
+
+resultat.innerHTML = output
+}
+</script>
+
+	<div class="container" id="din-Skatt-Container">
+		<div id="skatt-pa-inkomst">&nbsp;</div>
+	    <div class="tax-calc-wrapper">
+			<div class="container">
+			<div class="row" style="background:#efefef; padding-bottom: 15px; margin: 0 10px; border-radius: 10px;">
+			<div class="col-12">
+	        <form name="form" onSubmit="raknaut(); return false" id="myForm">
+	            <div id="din-Skatt-Form">
+	                <label> Kommun:</label>
+	                <div class="select-wrap">
+						<select id="komm" name="kommun" class="kommun-select">
+						<option value=32.38>Riksgenomsnitt</option>
+						<option value=32.80>Ale</option>
+						<option value=32.84>Alingsås</option>
+						<option value=33.42>Alvesta</option>
+						<option value=33.85>Aneby</option>
+						<option value=33.29>Arboga</option>
+						<option value=34.84>Arjeplog</option>
+						<option value=34.14>Arvidsjaur</option>
+						<option value=34.03>Arvika</option>
+						<option value=34.15>Askersund</option>
+						<option value=33.95>Avesta</option>
+						<option value=34.40>Bengtsfors</option>
+						<option value=34.22>Berg</option>
+						<option value=35.00>Bjurholm</option>
+						<option value=32.17>Bjuv</option>
+						<option value=33.94>Boden</option>
+						<option value=33.07>Bollebygd</option>
+						<option value=33.37>Bollnäs</option>
+						<option value=33.44>Borgholm</option>
+						<option value=34.40>Borlänge</option>
+						<option value=32.79>Borås</option>
+						<option value=32.23>Botkyrka</option>
+						<option value=33.37>Boxholm</option>
+						<option value=33.74>Bromölla</option>
+						<option value=35.09>Bräcke</option>
+						<option value=31.27>Burlöv</option>
+						<option value=31.41>Båstad</option>
+						<option value=34.69>Dals-Ed</option>
+						<option value=30.58>Danderyd</option>
+						<option value=35.30>Degerfors</option>
+						<option value=35.65>Dorotea</option>
+						<option value=34.55>Eda</option>
+						<option value=31.45>Ekerö</option>
+						<option value=34.02>Eksjö</option>
+						<option value=33.82>Emmaboda</option>
+						<option value=33.05>Enköping</option>
+						<option value=32.85>Eskilstuna</option>
+						<option value=31.72>Eslöv</option>
+						<option value=33.05>Essunga</option>
+						<option value=32.99>Fagersta</option>
+						<option value=32.50>Falkenberg</option>
+						<option value=33.43>Falköping</option>
+						<option value=34.05>Falun</option>
+						<option value=34.55>Filipstad</option>
+						<option value=33.70>Finspång</option>
+						<option value=33.10>Flen</option>
+						<option value=34.63>Forshaga</option>
+						<option value=34.39>Färgelanda</option>
+						<option value=34.27>Gagnef</option>
+						<option value=33.75>Gislaved</option>
+						<option value=32.95>Gnesta</option>
+						<option value=34.00>Gnosjö</option>
+						<option value=33.60>Gotland</option>
+						<option value=34.78>Grums</option>
+						<option value=33.47>Grästorp</option>
+						<option value=33.97>Gullspång</option>
+						<option value=33.89>Gällivare</option>
+						<option value=33.77>Gävle</option>
+						<option value=32.60>Göteborg</option>
+						<option value=33.60>Götene</option>
+						<option value=33.93>Habo</option>
+						<option value=34.30>Hagfors</option>
+						<option value=33.85>Hallsberg</option>
+						<option value=32.69>Hallstahammar</option>
+						<option value=32.38>Halmstad</option>
+						<option value=35.05>Hammarö</option>
+						<option value=31.28>Haninge</option>
+						<option value=33.84>Haparanda</option>
+						<option value=34.21>Heby</option>
+						<option value=34.15>Hedemora</option>
+						<option value=31.39>Helsingborg</option>
+						<option value=33.62>Herrljunga</option>
+						<option value=33.48>Hjo</option>
+						<option value=34.37>Hofors</option>
+						<option value=31.71>Huddinge</option>
+						<option value=33.12>Hudiksvall</option>
+						<option value=33.77>Hultsfred</option>
+						<option value=33.85>Hylte</option>
+						<option value=33.30>Håbo</option>
+						<option value=34.35>Hällefors</option>
+						<option value=34.17>Härjedalen</option>
+						<option value=34.63>Härnösand</option>
+						<option value=31.98>Härryda</option>
+						<option value=32.38>Hässleholm</option>
+						<option value=30.91>Höganäs</option>
+						<option value=34.07>Högsby</option>
+						<option value=32.26>Hörby</option>
+						<option value=32.63>Höör</option>
+						<option value=34.29>Jokkmokk</option>
+						<option value=31.52>Järfälla</option>
+						<option value=33.40>Jönköping</option>
+						<option value=33.89>Kalix</option>
+						<option value=33.67>Kalmar</option>
+						<option value=32.80>Karlsborg</option>
+						<option value=33.80>Karlshamn</option>
+						<option value=34.30>Karlskoga</option>
+						<option value=33.69>Karlskrona</option>
+						<option value=33.55>Karlstad</option>
+						<option value=32.95>Katrineholm</option>
+						<option value=34.63>Kil</option>
+						<option value=33.00>Kinda</option>
+						<option value=34.39>Kiruna</option>
+						<option value=31.93>Klippan</option>
+						<option value=32.62>Knivsta</option>
+						<option value=34.43>Kramfors</option>
+						<option value=32.64>Kristianstad</option>
+						<option value=34.25>Kristinehamn</option>
+						<option value=33.87>Krokom</option>
+						<option value=33.84>Kumla</option>
+						<option value=32.58>Kungsbacka</option>
+						<option value=32.91>Kungsör</option>
+						<option value=32.92>Kungälv</option>
+						<option value=29.59>Kävlinge</option>
+						<option value=33.04>Köping</option>
+						<option value=32.80>Laholm</option>
+						<option value=31.42>Landskrona</option>
+						<option value=35.00>Laxå</option>
+						<option value=33.73>Lekeberg</option>
+						<option value=33.80>Leksand</option>
+						<option value=32.03>Lerum</option>
+						<option value=33.81>Lessebo</option>
+						<option value=29.67>Lidingö</option>
+						<option value=32.74>Lidköping</option>
+						<option value=33.85>Lilla Västby</option>
+						<option value=34.60>Lindesberg</option>
+						<option value=31.75>Linköping</option>
+						<option value=33.07>Ljungby</option>
+						<option value=33.87>Ljusdal</option>
+						<option value=33.80>Ljusnarsberg</option>
+						<option value=30.72>Lomma</option>
+						<option value=34.05>Ludvika</option>
+						<option value=33.84>Luleå</option>
+						<option value=32.42>Lund</option>
+						<option value=34.90>Lycksele</option>
+						<option value=33.94>Lysekil</option>
+						<option value=32.42>Malmö</option>
+						<option value=34.45>Malung-Sälen</option>
+						<option value=35.20>Malå</option>
+						<option value=32.74>Mariestad</option>
+						<option value=32.99>Mark</option>
+						<option value=33.31>Markaryd</option>
+						<option value=34.08>Mellerud</option>
+						<option value=33.45>Mjölby</option>
+						<option value=34.32>Mora</option>
+						<option value=33.25>Motala</option>
+						<option value=34.10>Mullsjö</option>
+						<option value=34.86>Munkedal</option>
+						<option value=34.30>Munkfors</option>
+						<option value=31.99>Mölndal</option>
+						<option value=34.07>Mönsterås</option>
+						<option value=34.07>Mörbylånga</option>
+						<option value=30.11>Nacka</option>
+						<option value=34.55>Nora</option>
+						<option value=33.54>Norberg</option>
+						<option value=34.02>Nordanstig</option>
+						<option value=35.10>Nordmaling</option>
+						<option value=33.30>Norrköping</option>
+						<option value=32.05>Norrtälje</option>
+						<option value=35.20>Norsjö</option>
+						<option value=34.19>Nybro</option>
+						<option value=32.30>Nykvarn</option>
+						<option value=32.25>Nyköping</option>
+						<option value=32.18>Nynäshamn</option>
+						<option value=34.30>Nässjö</option>
+						<option value=34.27>Ockelbo</option>
+						<option value=33.75>Olofström</option>
+						<option value=34.30>Orsa</option>
+						<option value=33.69>Orust</option>
+						<option value=33.99>Osby</option>
+						<option value=34.21>Oskarshamn</option>
+						<option value=33.37>Ovanåker</option>
+						<option value=33.05>Oxelösund</option>
+						<option value=34.74>Pajala</option>
+						<option value=31.36>Partille</option>
+						<option value=31.99>Perstorp</option>
+						<option value=33.59>Piteå</option>
+						<option value=34.92>Ragunda</option>
+						<option value=35.00>Robertsfors</option>
+						<option value=33.68>Ronneby</option>
+						<option value=33.80>Rättvik</option>
+						<option value=33.19>Sala</option>
+						<option value=32.00>Salem</option>
+						<option value=33.12>Sandviken</option>
+						<option value=31.83>Sigtuna</option>
+						<option value=31.69>Simrishamn</option>
+						<option value=32.10>Sjöbo</option>
+						<option value=33.38>Skara</option>
+						<option value=34.45>Skellefteå</option>
+						<option value=33.34>Skinnskatteberg</option>
+						<option value=31.60>Skurup</option>
+						<option value=33.09>Skövde</option>
+						<option value=34.44>Smedjebacken</option>
+						<option value=34.68>Sollefteå</option>
+						<option value=30.45>Sollentuna</option>
+						<option value=29.70>Solna</option>
+						<option value=35.45>Sorsele</option>
+						<option value=33.47>Sotenäs</option>
+						<option value=30.12>Staffanstorp</option>
+						<option value=33.12>Stenungsund</option>
+						<option value=30.55>Stockholm</option>
+						<option value=34.98>Storfors</option>
+						<option value=34.95>Storuman</option>
+						<option value=32.50>Strängnäs</option>
+						<option value=33.39>Strömstad</option>
+						<option value=34.92>Strömsund</option>
+						<option value=31.58>Sundbyberg</option>
+						<option value=33.88>Sundsvall</option>
+						<option value=33.75>Sunne</option>
+						<option value=33.19>Surahammar</option>
+						<option value=31.92>Svalöv</option>
+						<option value=31.42>Svedala</option>
+						<option value=33.53>Svenljunga</option>
+						<option value=33.80>Säffle</option>
+						<option value=34.30>Säter</option>
+						<option value=33.68>Sävsjö</option>
+						<option value=33.17>Söderhamn</option>
+						<option value=33.53>Söderköping</option>
+						<option value=32.38>Södertälje</option>
+						<option value=33.86>Sölvesborg</option>
+						<option value=33.04>Tanum</option>
+						<option value=33.19>Tibro</option>
+						<option value=33.55>Tidaholm</option>
+						<option value=33.00>Tierp</option>
+						<option value=34.38>Timrå</option>
+						<option value=34.00>Tingsryd</option>
+						<option value=33.19>Tjörn</option>
+						<option value=31.79>Tomelilla</option>
+						<option value=34.30>Torsby</option>
+						<option value=33.79>Torsås</option>
+						<option value=32.98>Tranemo</option>
+						<option value=33.77>Tranås</option>
+						<option value=31.58>Trelleborg</option>
+						<option value=33.84>Trollhättan</option>
+						<option value=32.03>Trosa</option>
+						<option value=31.83>Tyresö</option>
+						<option value=29.88>Täby</option>
+						<option value=33.20>Töreboda</option>
+						<option value=33.64>Uddevalla</option>
+						<option value=32.53>Ulricehamn</option>
+						<option value=34.65>Umeå</option>
+						<option value=31.75>Upplands Västby</option>
+						<option value=31.73>Upplands-Bro</option>
+						<option value=32.85>Uppsala</option>
+						<option value=33.80>Uppvidinge</option>
+						<option value=34.35>Vadstena</option>
+						<option value=33.25>Vaggeryd</option>
+						<option value=34.03>Valdemarsvik</option>
+						<option value=31.23>Vallentuna</option>
+						<option value=34.28>Vansbro</option>
+						<option value=33.25>Vara</option>
+						<option value=31.73>Varberg</option>
+						<option value=31.63>Vaxholm</option>
+						<option value=29.68>Vellinge</option>
+						<option value=33.77>Vetlanda</option>
+						<option value=35.50>Vilhelmina</option>
+						<option value=34.22>Vimmerby</option>
+						<option value=35.20>Vindeln</option>
+						<option value=33.50>Vingåker</option>
+						<option value=33.09>Vårgårda</option>
+						<option value=33.69>Vänersborg</option>
+						<option value=35.20>Vännäs</option>
+						<option value=31.31>Värmdö</option>
+						<option value=33.28>Värnamo</option>
+						<option value=33.02>Västervik</option>
+						<option value=31.24>Västerås</option>
+						<option value=32.19>Växjö</option>
+						<option value=34.10>Ydre</option>
+						<option value=31.29>Ystad</option>
+						<option value=33.94>Åmål</option>
+						<option value=34.62>Ånge</option>
+						<option value=33.92>Åre</option>
+						<option value=34.25>Årjäng</option>
+						<option value=35.45>Åsele</option>
+						<option value=31.47>Åstorp</option>
+						<option value=33.94>Åtvidaberg</option>
+						<option value=33.86>Älmhult</option>
+						<option value=34.77>Älvdalen</option>
+						<option value=34.40>Älvkarleby</option>
+						<option value=33.79>Älvsbyn</option>
+						<option value=31.35>Ängelholm</option>
+						<option value=33.04>Öckerö</option>
+						<option value=33.95>Ödeshög</option>
+						<option value=33.65>Örebro</option>
+						<option value=30.24>Örkelljunga</option>
+						<option value=33.85>Örnsköldsvik</option>
+						<option value=33.72>Östersund</option>
+						<option value=28.93>Österåker</option>
+						<option value=33.30>Östhammar</option>
+						<option value=32.17>Östra Västby</option>
+						<option value=34.14>Överkalix</option>
+						<option value=33.84>Övertorneå</option>
+						</select>
+	                </div>
+	                <label>Månadslön:</label>
+	                <span id="lonvisa" style="top: -10px;"><input type="text" name="lon" placeholder="Fyll i värde..."></span>
+	                    <input class="sb-button-red-outline ml-4 m-0" type="submit" value="RÄKNA UT MIN SKATT" id="komm-submit">
+                </div>
+                <span style="font-size: 0.75rem;">Ifall det saknas data i uträkningen kan du behöva trycka på "Räkna ut min skatt" några gånger.</span>
+	        </form>
+			</div>
+		</div>
+		<div class="resultat-wrapper">
+			 <div class="resultat-inner">
+				 <div class="resultat-content">
+						<div class="container">
+							<div class="row">
+								<div class="col-12 skatt-1-results">
+									<div id="resultat"></div>
+									<div class="mt-3 mb-5">
+										<h3 style="font-size: 1.3rem; color: black;">Om räknesnurran</h3>
+										<p>
+											Räknesnurran gäller för inkomståret 2026. 
+											Uträkningen är förenklad och tar inte hänsyn till bland annat reseavdrag och ränteavdrag och tar inte med din eventuella kyrkoskatt. 
+											Den gäller bara arbetsinkomst och bara för personer som är yngre än 66 år. Marginaleffekter av bidrag och socialförsäkringsförmåner beaktas inte. 
+											Moms och punktskatter (bensin-, el-, alkohol- och tobaksskatter) räknas som procent av nettoinkomsten enligt snittet i befolkningen (18,4 procent). 
+											Räknesnurran gäller endast för den med normal arbetsgivaravgift på 31,42 procent och tar inte hänsyn till nedsatt arbetsgivaravgift för de som uppnått pensionsålder. 
+											Egenföretagare (enskild firma och handelsbolag) betalar egenavgift på 28,97 procent.
+										</p>
+									</div>
+								</div>
+							</div>
+						</div>
+					  <br>
+					  <br>
+				  
+				 </div>
+					 
+			 </div>
+			 								
+		</div>
+	</div>
+	</div>
+</div>
+<style>
+.select-dropdown {
+	display: none;
+}
+.tax-calc-wrapper {
+	margin-top: 120px;
+}
+.skatt-1-results {
+	background:#efefef;
+	margin-top: 15px;
+	padding: 30px !important;
+	border-radius: 10px;
+}
+.inkomst-form-validate {
+	color: red;
+	font-size: 1.1rem;
+	font-weight: 600;
+}
+.kommun-select {
+   display: block; 
+   width: 100%; 
+	font-size: 1rem;
+}
+#din-Skatt-Form {
+	display: flex;
+	flex-direction: row;
+	gap: 10px;
+	align-items: center;
+}
+@media screen and (max-width: 767px) {
+	#din-Skatt-Form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	align-items: center;
+	}
+	.select-wrap {
+		width: 100%;
+	}
+	.table td {
+		font-size: 0.95rem;
+		width: 50%;
+	}
+}
+</style>

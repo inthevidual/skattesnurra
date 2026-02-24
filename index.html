@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SKATT?! — Hur mycket skatt betalar du egentligen?</title>
+  <meta name="description" content="Hur mycket skatt betalar du egentligen? Räkna ut din inkomstskatt, arbetsgivaravgifter, moms och se vad som blir kvar.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://skatt.cptjanst.se/">
+  <meta property="og:title" content="SKATT?!">
+  <meta property="og:description" content="Hur mycket skatt betalar du egentligen?">
+  <meta property="og:image" content="https://skatt.cptjanst.se/og.jpg">
+  <meta property="og:image:width" content="1024">
+  <meta property="og:image:height" content="1024">
+  <meta property="og:locale" content="sv_SE">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SKATT?!">
+  <meta name="twitter:description" content="Hur mycket skatt betalar du egentligen?">
+  <meta name="twitter:image" content="https://skatt.cptjanst.se/og.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="css/custom.css?v=0.31">
+</head>
+<body class="bg-white text-gray-900">
+  <main class="max-w-3xl mx-auto px-4 py-8">
+
+    <section class="mb-8">
+      <h1 class="text-2xl sm:text-3xl font-bold mb-4">Räkna ut din inkomstskatt</h1>
+      <p class="mb-2">Sverige har idag bland världens högsta skatter på arbete. Men bara <strong>1/10</strong> svenskar vet hur mycket de betalar. Det vill vi råda bot på.</p>
+      <p>Här kan du ange inkomst och hemkommun, och se din verkliga skatt.</p>
+    </section>
+
+    <section class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
+      <form id="myForm" class="flex flex-col sm:flex-row gap-4 items-end">
+        <fieldset class="flex-1 w-full">
+          <label for="komm-search" class="block text-base font-medium mb-1">Kommun:</label>
+          <div class="relative" id="komm-wrapper">
+            <input type="text" id="komm-search" autocomplete="off" placeholder="Sök kommun..."
+                   class="w-full rounded border border-gray-300 px-3 py-2 text-base">
+            <ul id="komm-list" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto shadow-lg"></ul>
+            <select id="komm" name="kommun" class="hidden">
+              <!-- Populated by JS from constants -->
+            </select>
+          </div>
+        </fieldset>
+
+        <fieldset class="flex-1 w-full">
+          <label class="block text-base font-medium mb-1">Månadslön:</label>
+          <div class="flex items-baseline gap-1 mb-2">
+            <input type="text" id="lon-edit" inputmode="numeric"
+                   class="w-32 text-2xl font-bold bg-transparent border-b-2 border-dashed border-gray-400 focus:border-blue-600 outline-none cursor-text transition-colors text-right"
+                   style="color:#0072CE">
+            <span class="text-lg font-medium text-gray-500">kr</span>
+          </div>
+          <input type="range" id="lon" name="lon" min="0" max="100000" step="1000" value="25000"
+                 class="w-full">
+          <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, klicka och fyll i för exakt lön</p>
+        </fieldset>
+      </form>
+    </section>
+
+    <section id="resultat" aria-live="polite" class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
+      <!-- Results rendered here by JS -->
+    </section>
+
+    <section class="mb-8">
+      <h3 class="text-lg font-semibold mb-2">Om räknesnurran</h3>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        Räknesnurran gäller för inkomståret 2026.
+        Uträkningen är förenklad och tar inte hänsyn till bland annat reseavdrag och ränteavdrag och tar inte med din eventuella kyrkoskatt.
+        Den gäller bara arbetsinkomst och bara för personer som är yngre än 66 år. Marginaleffekter av bidrag och socialförsäkringsförmåner beaktas inte.
+        Moms och punktskatter (bensin-, el-, alkohol- och tobaksskatter) räknas som procent av nettoinkomsten enligt snittet i befolkningen (18,4 procent).
+        Räknesnurran gäller endast för den med normal arbetsgivaravgift på 31,42 procent och tar inte hänsyn till nedsatt arbetsgivaravgift för de som uppnått pensionsålder.
+        Egenföretagare (enskild firma och handelsbolag) betalar egenavgift på 28,97 procent.
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-1.5 text-center text-gray-500" style="font-family:'IBM Plex Mono',monospace;font-size:10px">
+    v0.31 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
+  </footer>
+
+  <script type="module" src="js/main.js?v=0.31"></script>
+</body>
+</html>
