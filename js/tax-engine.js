@@ -236,7 +236,7 @@ export function calculateTaxBreakdown(input, taxYear = 2026) {
   const regionalReduction = regionalReductionEligible ? REGIONAL_REDUCTION_AMOUNT : 0;
 
   // Income tax (skatt): municipal tax - JSA - employment reduction + state tax
-  const incomeTax = Math.round(municipalTax - jobbskatteavdrag - employmentIncomeReduction + stateTax.amount);
+  const incomeTax = Math.max(0, Math.round(municipalTax - jobbskatteavdrag - employmentIncomeReduction + stateTax.amount));
 
   // Pension contribution (depends on income tax)
   const pensionContribution = calculatePensionContribution(annualIncome, incomeTax, taxYear);
