@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.36';
-import { formateraAvrundat } from './utils.js?v=0.36';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.37';
+import { formateraAvrundat } from './utils.js?v=0.37';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -136,19 +136,39 @@ function skapaVäljare({ wrapper, input, list, select }) {
   };
 }
 
+// Kommunväljare — skapas en gång, uppdateras vid årsbyte
+let _uppdateraKommun = null;
+
 /**
  * Fyll den dolda <select>-listan och koppla ihop den sökbara rullgardinsmenyn.
  * @param {HTMLSelectElement} selectElement
  * @param {number} [inkomstår]
  */
 export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMSTÅR) {
-  const uppdatera = skapaVäljare({
-    wrapper: document.querySelector('#komm-wrapper'),
-    input: document.querySelector('#komm-search'),
-    list: document.querySelector('#komm-list'),
-    select: selectElement,
-  });
-  uppdatera(INKOMSTÅR[inkomstår].kommuner, k => k.namn, k => k.skattesats);
+  if (!_uppdateraKommun) {
+    _uppdateraKommun = skapaVäljare({
+      wrapper: document.querySelector('#komm-wrapper'),
+      input: document.querySelector('#komm-search'),
+      list: document.querySelector('#komm-list'),
+      select: selectElement,
+    });
+  }
+  _uppdateraKommun(INKOMSTÅR[inkomstår].kommuner, k => k.namn, k => k.skattesats);
+}
+
+/**
+ * Fyll årsväljaren med tillgängliga inkomstår.
+ * @param {HTMLSelectElement} selectElement
+ */
+export function fyllÅrsväljare(selectElement) {
+  selectElement.innerHTML = '';
+  for (const år of Object.keys(INKOMSTÅR).sort((a, b) => b - a)) {
+    const option = document.createElement('option');
+    option.value = år;
+    option.textContent = år;
+    if (Number(år) === STANDARD_INKOMSTÅR) option.selected = true;
+    selectElement.appendChild(option);
+  }
 }
 
 // Församlingsväljare — skapas en gång, uppdateras vid kommunkbyte
@@ -178,17 +198,19 @@ export function fyllFörsamlingsväljare(selectElement, kommunNamn, inkomstår =
 /**
  * Läs formulärvärden från skatteberäkningsformuläret.
  * @param {HTMLFormElement} form
- * @returns {{ månadslön: number, kommunalSkattesats: number, kommunNamn: string, kyrkoavgiftSats: number }}
+ * @returns {{ månadslön: number, kommunalSkattesats: number, kommunNamn: string, kyrkoavgiftSats: number, inkomstår: number }}
  */
 export function läsFormulärVärden(form) {
   const selectElement = form.querySelector('#komm');
   const selectedOption = selectElement.options[selectElement.selectedIndex];
+  const inkomstårSelect = document.querySelector('#inkomstar');
+  const inkomstår = Number(inkomstårSelect.value);
 
   let kyrkoavgiftSats = 0;
   const kyrkomedlem = document.querySelector('#kyrkomedlem');
   if (kyrkomedlem?.checked) {
     if (selectedOption.text === 'Riksgenomsnitt') {
-      kyrkoavgiftSats = INKOMSTÅR[STANDARD_INKOMSTÅR].KYRKOAVGIFT_RIKSGENOMSNITT;
+      kyrkoavgiftSats = INKOMSTÅR[inkomstår].KYRKOAVGIFT_RIKSGENOMSNITT;
     } else {
       const församlingSelect = document.querySelector('#forsamling');
       if (församlingSelect?.options.length) {
@@ -202,6 +224,7 @@ export function läsFormulärVärden(form) {
     kommunalSkattesats: Number(selectedOption.value),
     kommunNamn: selectedOption.text,
     kyrkoavgiftSats,
+    inkomstår,
   };
 }
 

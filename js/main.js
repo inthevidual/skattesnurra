@@ -1,13 +1,14 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.36';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.37';
 import {
   fyllKommunväljare,
   fyllFörsamlingsväljare,
+  fyllÅrsväljare,
   läsFormulärVärden,
   tillämpUrlParametrar,
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=0.36';
+} from './ui.js?v=0.37';
 
 /**
  * Kör skatteberäkningen och visa resultat.
@@ -31,7 +32,7 @@ function beräkna(form, resultatBehållare) {
     return;
   }
 
-  const uppdelning = beräknaSkatteuppdelning(värden);
+  const uppdelning = beräknaSkatteuppdelning(värden, värden.inkomstår);
 
   if (!uppdelning) {
     visaFelmeddelande(resultatBehållare, 'Skriv bara siffror utan mellanslag eller kommatecken.');
@@ -62,9 +63,11 @@ function initiera() {
   const slider = form.querySelector('#lon');
   const edit = document.querySelector('#lon-edit');
   const resultatBehållare = document.querySelector('#resultat');
+  const inkomstårSelect = document.querySelector('#inkomstar');
 
-  // Fyll kommunväljaren från konstanter
-  fyllKommunväljare(selectElement);
+  // Fyll årsväljaren och kommunväljaren
+  fyllÅrsväljare(inkomstårSelect);
+  fyllKommunväljare(selectElement, Number(inkomstårSelect.value));
 
   // Tillämpa URL-parametrar (t.ex. ?manadslon=25000)
   tillämpUrlParametrar(form);
@@ -134,7 +137,7 @@ function initiera() {
 
   function uppdateraFörsamlingsväljare() {
     if (harFörsamlingar()) {
-      fyllFörsamlingsväljare(församlingSelect, hämtaKommunNamn());
+      fyllFörsamlingsväljare(församlingSelect, hämtaKommunNamn(), Number(inkomstårSelect.value));
       församlingFieldset.classList.remove('hidden');
     } else {
       församlingFieldset.classList.add('hidden');
@@ -156,6 +159,16 @@ function initiera() {
 
   // Räkna om när kommun ändras
   selectElement.addEventListener('change', () => {
+    if (kyrkomedlem.checked) {
+      uppdateraFörsamlingsväljare();
+    }
+    synkaFrånReglage();
+  });
+
+  // Byt inkomstår — fyll om kommun- och församlingsväljare
+  inkomstårSelect.addEventListener('change', () => {
+    const år = Number(inkomstårSelect.value);
+    fyllKommunväljare(selectElement, år);
     if (kyrkomedlem.checked) {
       uppdateraFörsamlingsväljare();
     }
