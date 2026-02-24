@@ -1,43 +1,48 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.31';
-import { formateraAvrundat } from './utils.js?v=0.31';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.32';
+import { formateraAvrundat } from './utils.js?v=0.32';
 
 /**
- * Fyll den dolda <select>-listan och koppla ihop den sökbara rullgardinsmenyn.
- * @param {HTMLSelectElement} selectElement
- * @param {number} [inkomstår]
+ * Generisk sökbar rullgardinsmeny-fabrik.
+ * @param {object} opts
+ * @param {HTMLElement} opts.wrapper - Wrapper-div
+ * @param {HTMLInputElement} opts.input - Sökfältet
+ * @param {HTMLElement} opts.list - UL-element för listan
+ * @param {HTMLSelectElement} opts.select - Dold select
+ * @param {Array} opts.poster - Dataposter
+ * @param {function} opts.etikettFn - post → visningsnamn
+ * @param {function} opts.värdeFn - post → option-value
  */
-export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMSTÅR) {
-  const KOMMUNER = INKOMSTÅR[inkomstår].kommuner;
-  const wrapper = document.querySelector('#komm-wrapper');
-  const input = document.querySelector('#komm-search');
-  const list = document.querySelector('#komm-list');
-
+function skapaVäljare({ wrapper, input, list, select, poster, etikettFn, värdeFn }) {
   // Fyll dold select
-  for (const kommun of KOMMUNER) {
+  select.innerHTML = '';
+  for (const post of poster) {
     const option = document.createElement('option');
-    option.value = kommun.skattesats;
-    option.textContent = kommun.namn;
-    selectElement.appendChild(option);
+    option.value = värdeFn(post);
+    option.textContent = etikettFn(post);
+    select.appendChild(option);
   }
 
-  // Sätt initial text till första kommunen
-  input.value = selectElement.options[0].text;
+  // Sätt initial text till första posten
+  if (select.options.length) {
+    input.value = select.options[0].text;
+  }
 
   function byggLista(filter) {
     list.innerHTML = '';
     const lower = filter.toLowerCase();
-    for (const k of KOMMUNER) {
-      if (lower && !k.namn.toLowerCase().includes(lower)) continue;
+    for (const p of poster) {
+      const namn = etikettFn(p);
+      if (lower && !namn.toLowerCase().includes(lower)) continue;
       const li = document.createElement('li');
-      li.textContent = k.namn;
-      li.dataset.rate = k.skattesats;
+      li.textContent = namn;
+      li.dataset.value = värdeFn(p);
       li.className = 'px-3 py-2 cursor-pointer hover:bg-blue-100';
       list.appendChild(li);
     }
   }
 
   function öppna() {
-    byggLista(input.value === selectElement.options[selectElement.selectedIndex].text ? '' : input.value);
+    byggLista(input.value === select.options[select.selectedIndex]?.text ? '' : input.value);
     list.classList.remove('hidden');
   }
 
@@ -45,18 +50,20 @@ export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMST�
     list.classList.add('hidden');
   }
 
-  function väljKommun(namn, skattesats) {
+  function välj(namn, värde) {
     input.value = namn;
-    // Uppdatera dold select
-    for (let i = 0; i < selectElement.options.length; i++) {
-      if (selectElement.options[i].value === String(skattesats)) {
-        selectElement.selectedIndex = i;
+    for (let i = 0; i < select.options.length; i++) {
+      if (select.options[i].value === String(värde)) {
+        select.selectedIndex = i;
         break;
       }
     }
     stäng();
-    selectElement.dispatchEvent(new Event('change'));
+    select.dispatchEvent(new Event('change'));
   }
+
+  // Rensa gamla lyssnare genom att klona input (enklare vid ombindning)
+  // Vi använder namngivna funktioner och lägger till direkt
 
   input.addEventListener('focus', () => {
     input.select();
@@ -71,19 +78,18 @@ export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMST�
   list.addEventListener('mousedown', (e) => {
     const li = e.target.closest('li');
     if (!li) return;
-    väljKommun(li.textContent, li.dataset.rate);
+    välj(li.textContent, li.dataset.value);
   });
 
-  // Stäng vid klick utanför
   document.addEventListener('mousedown', (e) => {
     if (!wrapper.contains(e.target)) {
-      // Återställ input till aktuellt val om användaren inte valde
-      input.value = selectElement.options[selectElement.selectedIndex].text;
+      if (select.options.length) {
+        input.value = select.options[select.selectedIndex].text;
+      }
       stäng();
     }
   });
 
-  // Tangentbordsnavigering
   input.addEventListener('keydown', (e) => {
     const items = list.querySelectorAll('li');
     const active = list.querySelector('.bg-blue-200');
@@ -104,12 +110,14 @@ export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMST�
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (active) {
-        väljKommun(active.textContent, active.dataset.rate);
+        välj(active.textContent, active.dataset.value);
       } else if (items.length === 1) {
-        väljKommun(items[0].textContent, items[0].dataset.rate);
+        välj(items[0].textContent, items[0].dataset.value);
       }
     } else if (e.key === 'Escape') {
-      input.value = selectElement.options[selectElement.selectedIndex].text;
+      if (select.options.length) {
+        input.value = select.options[select.selectedIndex].text;
+      }
       stäng();
       input.blur();
     }
@@ -117,18 +125,66 @@ export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMST�
 }
 
 /**
+ * Fyll den dolda <select>-listan och koppla ihop den sökbara rullgardinsmenyn.
+ * @param {HTMLSelectElement} selectElement
+ * @param {number} [inkomstår]
+ */
+export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMSTÅR) {
+  skapaVäljare({
+    wrapper: document.querySelector('#komm-wrapper'),
+    input: document.querySelector('#komm-search'),
+    list: document.querySelector('#komm-list'),
+    select: selectElement,
+    poster: INKOMSTÅR[inkomstår].kommuner,
+    etikettFn: k => k.namn,
+    värdeFn: k => k.skattesats,
+  });
+}
+
+/**
+ * Fyll församlingsväljaren för vald kommun.
+ * @param {HTMLSelectElement} selectElement
+ * @param {string} kommunNamn
+ * @param {number} [inkomstår]
+ */
+export function fyllFörsamlingsväljare(selectElement, kommunNamn, inkomstår = STANDARD_INKOMSTÅR) {
+  const data = INKOMSTÅR[inkomstår];
+  const församlingar = data.församlingar?.[kommunNamn] || [];
+
+  skapaVäljare({
+    wrapper: document.querySelector('#forsamling-wrapper'),
+    input: document.querySelector('#forsamling-search'),
+    list: document.querySelector('#forsamling-list'),
+    select: selectElement,
+    poster: församlingar,
+    etikettFn: f => f.namn,
+    värdeFn: f => f.kyrkoavgift,
+  });
+}
+
+/**
  * Läs formulärvärden från skatteberäkningsformuläret.
  * @param {HTMLFormElement} form
- * @returns {{ månadslön: number, kommunalSkattesats: number, kommunNamn: string }}
+ * @returns {{ månadslön: number, kommunalSkattesats: number, kommunNamn: string, kyrkoavgiftSats: number }}
  */
 export function läsFormulärVärden(form) {
   const selectElement = form.querySelector('#komm');
   const selectedOption = selectElement.options[selectElement.selectedIndex];
 
+  let kyrkoavgiftSats = 0;
+  const kyrkomedlem = document.querySelector('#kyrkomedlem');
+  if (kyrkomedlem?.checked) {
+    const församlingSelect = document.querySelector('#forsamling');
+    if (församlingSelect?.options.length) {
+      kyrkoavgiftSats = Number(församlingSelect.options[församlingSelect.selectedIndex].value) || 0;
+    }
+  }
+
   return {
     månadslön: Number(form.lon.value),
     kommunalSkattesats: Number(selectedOption.value),
     kommunNamn: selectedOption.text,
+    kyrkoavgiftSats,
   };
 }
 
@@ -167,7 +223,7 @@ export function visaFelmeddelande(container, meddelande) {
 function byggKategorier(uppdelning) {
   const total = uppdelning.totalArbetsgivarkostnad;
   const inkomstskatt = uppdelning.inkomstskatt + uppdelning.pensionsavgift
-    + uppdelning.begravningsavgift + uppdelning.publicServiceAvgift
+    + uppdelning.begravningsavgift + uppdelning.kyrkoavgift + uppdelning.publicServiceAvgift
     - uppdelning.regionalReduktion;
 
   return {
@@ -398,6 +454,10 @@ export function visaResultat(container, uppdelning) {
 
   if (uppdelning.begravningsavgift > 0) {
     output += tabellrad('Begravningsavgift', -uppdelning.begravningsavgift / 12, false, rowIndex++);
+  }
+
+  if (uppdelning.kyrkoavgift > 0) {
+    output += tabellrad('Kyrkoavgift', -uppdelning.kyrkoavgift / 12, false, rowIndex++);
   }
 
   if (uppdelning.publicServiceAvgift > 0) {

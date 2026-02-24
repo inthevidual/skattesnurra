@@ -39,6 +39,8 @@ async function hämtaOchParsera(år) {
 
   // Aggregera per kommun: kommunalskatt + landstingsskatt, samt begravningsavgift
   const kommunMap = new Map();
+  // Församlingar per kommun: kyrkoavgift
+  const församlingMap = new Map();
 
   for (const rad of dataRader) {
     const fält = rad.split('\t');
@@ -48,6 +50,7 @@ async function hämtaOchParsera(år) {
     const kommunalskatt = parseFloat(fält[6]);
     const landstingsskatt = parseFloat(fält[7]);
     const begravningsavgift = parseFloat(fält[8]);
+    const kyrkoavgift = parseFloat(fält[9]);
 
     if (!kommunMap.has(kommunNamn)) {
       kommunMap.set(kommunNamn, {
@@ -56,12 +59,29 @@ async function hämtaOchParsera(år) {
         begravningsavgift: Math.round(begravningsavgift * 100000) / 100000,
       });
     }
+
+    // Församling
+    const församlingNamn = titelStil(fält[3].trim());
+    if (församlingNamn && !isNaN(kyrkoavgift)) {
+      if (!församlingMap.has(kommunNamn)) {
+        församlingMap.set(kommunNamn, []);
+      }
+      församlingMap.get(kommunNamn).push({
+        namn: församlingNamn,
+        kyrkoavgift: Math.round(kyrkoavgift * 100) / 100,
+      });
+    }
   }
 
   // Sortera alfabetiskt
   const kommuner = [...kommunMap.values()].sort((a, b) => a.namn.localeCompare(b.namn, 'sv'));
 
-  return kommuner;
+  // Sortera församlingar inom varje kommun
+  for (const [, lista] of församlingMap) {
+    lista.sort((a, b) => a.namn.localeCompare(b.namn, 'sv'));
+  }
+
+  return { kommuner, församlingMap };
 }
 
 async function main() {
@@ -72,9 +92,10 @@ async function main() {
     process.exit(1);
   }
 
-  const kommuner = await hämtaOchParsera(år);
+  const { kommuner, församlingMap } = await hämtaOchParsera(år);
 
   console.error(`${kommuner.length} kommuner hittade.`);
+  console.error(`${församlingMap.size} kommuner med församlingar, ${[...församlingMap.values()].reduce((s, a) => s + a.length, 0)} församlingar totalt.`);
 
   // Skriv ut JSON-array till stdout
   const output = kommuner.map(k =>
@@ -88,6 +109,22 @@ async function main() {
   console.log('  kommuner: [');
   console.log(output);
   console.log('  ],');
+
+  // Skriv ut församlingar
+  console.log('');
+  console.log('  församlingar: {');
+  const sortedKommuner = [...församlingMap.keys()].sort((a, b) => a.localeCompare(b, 'sv'));
+  for (const kommun of sortedKommuner) {
+    const lista = församlingMap.get(kommun);
+    const escapedKommun = kommun.includes("'") ? kommun.replace(/'/g, "\\'") : kommun;
+    console.log(`    '${escapedKommun}': [`);
+    for (const f of lista) {
+      const escapedNamn = f.namn.includes("'") ? f.namn.replace(/'/g, "\\'") : f.namn;
+      console.log(`      { namn: '${escapedNamn}', kyrkoavgift: ${f.kyrkoavgift.toFixed(2)} },`);
+    }
+    console.log('    ],');
+  }
+  console.log('  },');
 
   // Skriv ut begravningsavgifter för referens
   console.error('\nBegravningsavgifter (för referens):');

@@ -205,6 +205,17 @@ export function harRegionalSkattereduktion(kommunNamn, inkomstår = STANDARD_INK
 }
 
 /**
+ * Beräkna kyrkoavgift.
+ * @param {number} årsinkomst
+ * @param {number} grundavdrag
+ * @param {number} kyrkoavgiftSats - Som decimal (t.ex. 0.0086)
+ * @returns {number} Kyrkoavgift i SEK
+ */
+export function beräknaKyrkoavgift(årsinkomst, grundavdrag, kyrkoavgiftSats) {
+  return Math.max(0, (årsinkomst - grundavdrag) * kyrkoavgiftSats);
+}
+
+/**
  * Beräkna fullständig skatteuppdelning för given inkomst och kommun.
  * Huvudfunktionen som ersätter ursprunglig `raknaut()`.
  *
@@ -212,6 +223,7 @@ export function harRegionalSkattereduktion(kommunNamn, inkomstår = STANDARD_INK
  * @param {number} indata.månadslön - Månadslön i SEK
  * @param {number} indata.kommunalSkattesats - Kommunal skattesats i procent (t.ex. 32.38)
  * @param {string} indata.kommunNamn - Kommunnamn
+ * @param {number} [indata.kyrkoavgiftSats] - Kyrkoavgift i procent (t.ex. 0.86), 0 om ej medlem
  * @param {number} [inkomstår]
  * @returns {object} Fullständig skatteuppdelning med alla komponenter
  */
@@ -232,6 +244,9 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
   const skattereduktionFörvärvsinkomst = beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår);
   const statligSkatt = beräknaStatligSkatt(årsinkomst, inkomstår);
   const begravningsavgift = beräknaBegravningsavgift(årsinkomst, grundavdrag, indata.kommunNamn, inkomstår);
+  const kyrkoavgift = indata.kyrkoavgiftSats
+    ? beräknaKyrkoavgift(årsinkomst, grundavdrag, indata.kyrkoavgiftSats / 100)
+    : 0;
   const publicServiceAvgift = beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår);
 
   // Regional reduktion
@@ -246,7 +261,7 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
 
   // Nettoinkomst efter skatt
   const nettoÅrsinkomst = Math.round(
-    årsinkomst - inkomstskatt - pensionsavgift - begravningsavgift - publicServiceAvgift + regionalReduktion
+    årsinkomst - inkomstskatt - pensionsavgift - begravningsavgift - kyrkoavgift - publicServiceAvgift + regionalReduktion
   );
 
   // Arbetsgivarkostnader
@@ -262,7 +277,7 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
     (marginalStatligSkattesats + (1 - marginalStatligSkattesats) * VIKTAD_MOMS + AGA) / (1 + AGA);
 
   // Total skattebörda
-  const totalSkatt = moms + arbetsgivaravgift + inkomstskatt + pensionsavgift + begravningsavgift + publicServiceAvgift - regionalReduktion;
+  const totalSkatt = moms + arbetsgivaravgift + inkomstskatt + pensionsavgift + begravningsavgift + kyrkoavgift + publicServiceAvgift - regionalReduktion;
   const genomsnittligSkattesats = totalSkatt / totalArbetsgivarkostnad;
 
   return {
@@ -273,6 +288,7 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
     skattereduktionFörvärvsinkomst,
     statligSkatt: statligSkatt.belopp,
     begravningsavgift,
+    kyrkoavgift,
     pensionsavgift,
     publicServiceAvgift,
     regionalReduktion,

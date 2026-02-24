@@ -8,6 +8,7 @@ import {
   beräknaSkattereduktionFörvärvsinkomst,
   beräknaStatligSkatt,
   beräknaBegravningsavgift,
+  beräknaKyrkoavgift,
   beräknaPensionsavgift,
   beräknaPublicServiceAvgift,
   harRegionalSkattereduktion,
@@ -272,6 +273,25 @@ describe('harRegionalSkattereduktion', () => {
   });
 });
 
+// ─── Kyrkoavgift ──────────────────────────────────────────────────
+
+describe('beräknaKyrkoavgift', () => {
+  it('calculates correctly', () => {
+    // (300000 - 34000) * 0.0086 = 266000 * 0.0086 = 2287.6
+    const fee = beräknaKyrkoavgift(300000, 34000, 0.0086);
+    assert.ok(Math.abs(fee - 2287.6) < 0.01);
+  });
+
+  it('floors at 0 for low income', () => {
+    const fee = beräknaKyrkoavgift(10000, 25100, 0.0086);
+    assert.equal(fee, 0);
+  });
+
+  it('returns 0 for zero rate', () => {
+    assert.equal(beräknaKyrkoavgift(300000, 34000, 0), 0);
+  });
+});
+
 // ─── Full Tax Breakdown (Integration Tests) ──────────────────────
 
 describe('beräknaSkatteuppdelning', () => {
@@ -388,6 +408,43 @@ describe('beräknaSkatteuppdelning', () => {
     });
 
     assert.equal(result.regionalReduktion, 0);
+  });
+
+  it('kyrkoavgift included when rate provided', () => {
+    const result = beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.38,
+      kommunNamn: 'Riksgenomsnitt',
+      kyrkoavgiftSats: 0.86,
+    });
+    assert.ok(result.kyrkoavgift > 0);
+    // (300000 - 34000) * 0.0086 = 2287.6
+    assert.ok(Math.abs(result.kyrkoavgift - 2287.6) < 0.01);
+  });
+
+  it('kyrkoavgift is 0 when rate absent', () => {
+    const result = beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.38,
+      kommunNamn: 'Riksgenomsnitt',
+    });
+    assert.equal(result.kyrkoavgift, 0);
+  });
+
+  it('kyrkoavgift reduces netto and increases totalSkatt', () => {
+    const utan = beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.38,
+      kommunNamn: 'Riksgenomsnitt',
+    });
+    const med = beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.38,
+      kommunNamn: 'Riksgenomsnitt',
+      kyrkoavgiftSats: 0.86,
+    });
+    assert.ok(med.nettoÅrsinkomst < utan.nettoÅrsinkomst);
+    assert.ok(med.totalSkatt > utan.totalSkatt);
   });
 
   it('employer cost = salary + employer contribution', () => {

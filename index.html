@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/custom.css?v=0.31">
+  <link rel="stylesheet" href="css/custom.css?v=0.32">
 </head>
 <body class="bg-white text-gray-900">
   <main class="max-w-3xl mx-auto px-4 py-8">
@@ -59,6 +59,23 @@
           <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, klicka och fyll i för exakt lön</p>
         </fieldset>
       </form>
+
+      <div class="mt-4 flex flex-col sm:flex-row gap-4 items-start">
+        <label class="flex items-center gap-2 cursor-pointer select-none">
+          <input type="checkbox" id="kyrkomedlem" class="w-4 h-4 accent-blue-600">
+          <span class="text-base font-medium">Medlem i Svenska kyrkan?</span>
+        </label>
+
+        <fieldset id="forsamling-fieldset" class="flex-1 w-full hidden">
+          <label for="forsamling-search" class="block text-base font-medium mb-1">Församling:</label>
+          <div class="relative" id="forsamling-wrapper">
+            <input type="text" id="forsamling-search" autocomplete="off" placeholder="Sök församling..."
+                   class="w-full rounded border border-gray-300 px-3 py-2 text-base">
+            <ul id="forsamling-list" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto shadow-lg"></ul>
+            <select id="forsamling" class="hidden"></select>
+          </div>
+        </fieldset>
+      </div>
     </section>
 
     <section id="resultat" aria-live="polite" class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
@@ -69,7 +86,7 @@
       <h3 class="text-lg font-semibold mb-2">Om räknesnurran</h3>
       <p class="text-sm text-gray-700 leading-relaxed">
         Räknesnurran gäller för inkomståret 2026.
-        Uträkningen är förenklad och tar inte hänsyn till bland annat reseavdrag och ränteavdrag och tar inte med din eventuella kyrkoskatt.
+        Uträkningen är förenklad och tar inte hänsyn till bland annat reseavdrag och ränteavdrag.
         Den gäller bara arbetsinkomst och bara för personer som är yngre än 66 år. Marginaleffekter av bidrag och socialförsäkringsförmåner beaktas inte.
         Moms och punktskatter (bensin-, el-, alkohol- och tobaksskatter) räknas som procent av nettoinkomsten enligt snittet i befolkningen (18,4 procent).
         Räknesnurran gäller endast för den med normal arbetsgivaravgift på 31,42 procent och tar inte hänsyn till nedsatt arbetsgivaravgift för de som uppnått pensionsålder.
@@ -80,9 +97,9 @@
   </main>
 
   <footer class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-1.5 text-center text-gray-500" style="font-family:'IBM Plex Mono',monospace;font-size:10px">
-    v0.31 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
+    v0.32 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
   </footer>
 
-  <script type="module" src="js/main.js?v=0.31"></script>
+  <script type="module" src="js/main.js?v=0.32"></script>
 </body>
 </html>

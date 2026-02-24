@@ -1,12 +1,13 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.31';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.32';
 import {
   fyllKommunväljare,
+  fyllFörsamlingsväljare,
   läsFormulärVärden,
   tillämpUrlParametrar,
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=0.31';
+} from './ui.js?v=0.32';
 
 /**
  * Kör skatteberäkningen och visa resultat.
@@ -118,8 +119,37 @@ function initiera() {
     event.preventDefault();
   });
 
+  // Kyrkoavgift: checkbox + församlingsväljare
+  const kyrkomedlem = document.querySelector('#kyrkomedlem');
+  const församlingFieldset = document.querySelector('#forsamling-fieldset');
+  const församlingSelect = document.querySelector('#forsamling');
+
+  function uppdateraFörsamlingsväljare() {
+    const kommunNamn = selectElement.options[selectElement.selectedIndex].text;
+    fyllFörsamlingsväljare(församlingSelect, kommunNamn);
+  }
+
+  kyrkomedlem.addEventListener('change', () => {
+    if (kyrkomedlem.checked) {
+      uppdateraFörsamlingsväljare();
+      församlingFieldset.classList.remove('hidden');
+    } else {
+      församlingFieldset.classList.add('hidden');
+    }
+    beräkna(form, resultatBehållare);
+  });
+
+  församlingSelect.addEventListener('change', () => {
+    beräkna(form, resultatBehållare);
+  });
+
   // Räkna om när kommun ändras
-  selectElement.addEventListener('change', synkaFrånReglage);
+  selectElement.addEventListener('change', () => {
+    if (kyrkomedlem.checked) {
+      uppdateraFörsamlingsväljare();
+    }
+    synkaFrånReglage();
+  });
 
   // Initial synkronisering + beräkning
   edit.value = formateraInmatning(Number(slider.value));
