@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.34';
-import { formateraAvrundat } from './utils.js?v=0.34';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.35';
+import { formateraAvrundat } from './utils.js?v=0.35';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -246,6 +246,8 @@ function byggKategorier(uppdelning) {
   const kategorier = [
     { name: 'Arbetsgivaravgifter',   label: ['Arbetsgivar-', 'avgifter'],        value: uppdelning.arbetsgivaravgift, color: '#5C5D6E' },
     { name: 'Inkomstskatt',          label: ['Inkomst-', 'skatt'],               value: inkomstskatt,                 color: '#F9423A' },
+    { name: 'Moms och punktskatter', label: ['Moms', 'och punkt-', 'skatter'],   value: uppdelning.moms,              color: '#F5A623' },
+    { name: 'Kvar efter skatt',      label: ['Kvar', 'efter', 'skatt'],          value: uppdelning.nettoÅrsinkomst - uppdelning.moms, color: '#2BA784' },
   ];
 
   if (uppdelning.kyrkoavgift > 0) {
@@ -253,11 +255,6 @@ function byggKategorier(uppdelning) {
       { name: 'Kyrkoavgift',          label: ['Kyrko-', 'avgift'],                value: uppdelning.kyrkoavgift,       color: '#7B5EA7' },
     );
   }
-
-  kategorier.push(
-    { name: 'Moms och punktskatter', label: ['Moms', 'och punkt-', 'skatter'],   value: uppdelning.moms,              color: '#F5A623' },
-    { name: 'Kvar efter skatt',      label: ['Kvar', 'efter', 'skatt'],          value: uppdelning.nettoÅrsinkomst - uppdelning.moms, color: '#2BA784' },
-  );
 
   return { total, kategorier };
 }
