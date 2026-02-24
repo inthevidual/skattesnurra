@@ -151,7 +151,7 @@ export function beräknaStatligSkatt(årsinkomst, inkomstår = STANDARD_INKOMST�
 
 /**
  * Beräkna begravningsavgift.
- * Stockholm har en särskild lägre avgift.
+ * Stockholm och Tranås har egna huvudmän och sätter egna avgifter.
  * @param {number} årsinkomst
  * @param {number} grundavdrag
  * @param {string} kommunNamn
@@ -160,9 +160,9 @@ export function beräknaStatligSkatt(årsinkomst, inkomstår = STANDARD_INKOMST�
  */
 export function beräknaBegravningsavgift(årsinkomst, grundavdrag, kommunNamn, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
-  const sats = kommunNamn === 'Stockholm'
-    ? konfig.BEGRAVNINGSAVGIFT_STOCKHOLM
-    : konfig.BEGRAVNINGSAVGIFT_STANDARD;
+  let sats = konfig.BEGRAVNINGSAVGIFT_STANDARD;
+  if (kommunNamn === 'Stockholm') sats = konfig.BEGRAVNINGSAVGIFT_STOCKHOLM;
+  else if (kommunNamn === 'Tranås') sats = konfig.BEGRAVNINGSAVGIFT_TRANÅS;
   return Math.max(0, (årsinkomst - grundavdrag) * sats);
 }
 

@@ -12,6 +12,7 @@ export default {
   // Begravningsavgift
   BEGRAVNINGSAVGIFT_STANDARD: 0.00293,
   BEGRAVNINGSAVGIFT_STOCKHOLM: 0.0007,
+  BEGRAVNINGSAVGIFT_TRANÅS: 0.00275,
 
   // Kyrkoavgift riksgenomsnitt (snitt av alla församlingar)
   KYRKOAVGIFT_RIKSGENOMSNITT: 1.23,
