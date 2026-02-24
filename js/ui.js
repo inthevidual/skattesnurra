@@ -1,11 +1,13 @@
-import { KOMMUNER } from './constants.js?v=0.31';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.31';
 import { formateraAvrundat } from './utils.js?v=0.31';
 
 /**
  * Fyll den dolda <select>-listan och koppla ihop den sökbara rullgardinsmenyn.
  * @param {HTMLSelectElement} selectElement
+ * @param {number} [inkomstår]
  */
-export function fyllKommunväljare(selectElement) {
+export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMSTÅR) {
+  const KOMMUNER = INKOMSTÅR[inkomstår].kommuner;
   const wrapper = document.querySelector('#komm-wrapper');
   const input = document.querySelector('#komm-search');
   const list = document.querySelector('#komm-list');

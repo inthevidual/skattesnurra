@@ -1,36 +1,32 @@
-import {
-  INKOMSTÅR_2026,
-  GRUNDAVDRAG_INTERVALL,
-  JOBBSKATTEAVDRAG_INTERVALL,
-  KOMMUNER_MED_REGIONAL_SKATTEREDUKTION,
-} from './constants.js';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js';
 
 /**
- * Hämta inkomstårkonfiguration. Enbart 2026 stöds.
- * @param {number} [inkomstår=2026]
+ * Hämta inkomstårkonfiguration.
+ * @param {number} [inkomstår]
  * @returns {object}
  */
-function hämtaKonfig(inkomstår = 2026) {
-  if (inkomstår !== 2026) {
+function hämtaKonfig(inkomstår = STANDARD_INKOMSTÅR) {
+  const konfig = INKOMSTÅR[inkomstår];
+  if (!konfig) {
     throw new Error(`Inkomstår ${inkomstår} stöds inte`);
   }
-  return INKOMSTÅR_2026;
+  return konfig;
 }
 
 /**
  * Beräkna grundavdrag (basavdrag).
  * 5-stegs intervallsystem, resultat avrundat uppåt till närmaste 100.
  * @param {number} årsinkomst - Bruttoinkomst per år i SEK
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {number} Grundavdrag i SEK
  */
-export function beräknaGrundavdrag(årsinkomst, inkomstår = 2026) {
+export function beräknaGrundavdrag(årsinkomst, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { PBB } = konfig;
 
   if (årsinkomst <= 0) return 0;
 
-  for (const intervall of GRUNDAVDRAG_INTERVALL) {
+  for (const intervall of konfig.grundavdragIntervall) {
     const min = intervall.minPBB * PBB;
     const max = intervall.maxPBB * PBB;
 
@@ -47,34 +43,40 @@ export function beräknaGrundavdrag(årsinkomst, inkomstår = 2026) {
 
 /**
  * Beräkna jobbskatteavdrag.
- * 4-stegs intervallsystem.
+ * 4-stegs intervallsystem, med parametrar från årskonfigurationen.
  * @param {number} årsinkomst - Bruttoinkomst per år i SEK
  * @param {number} grundavdrag - Grundavdrag i SEK
  * @param {number} kommunalSkattesats - Kommunal skattesats som decimal (t.ex. 0.3238)
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {number} Jobbskatteavdrag i SEK
  */
-export function beräknaJobbskatteavdrag(årsinkomst, grundavdrag, kommunalSkattesats, inkomstår = 2026) {
+export function beräknaJobbskatteavdrag(årsinkomst, grundavdrag, kommunalSkattesats, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { PBB } = konfig;
+  const intervaller = konfig.jobbskatteavdragIntervall;
 
   if (årsinkomst <= 0) return 0;
 
+  const nivå1 = intervaller[0];
+  const nivå2 = intervaller[1];
+  const nivå3 = intervaller[2];
+  const nivå4 = intervaller[3];
+
   let jsa = 0;
 
-  if (årsinkomst < 0.91 * PBB) {
+  if (årsinkomst < nivå1.maxPBB * PBB) {
     // Nivå 1: linjär
     jsa = (årsinkomst - grundavdrag) * kommunalSkattesats;
     return Math.max(0, jsa);
-  } else if (årsinkomst < 3.24 * PBB) {
+  } else if (årsinkomst < nivå2.maxPBB * PBB) {
     // Nivå 2
-    jsa = (0.91 * PBB + 0.3874 * (årsinkomst - 0.91 * PBB) - grundavdrag) * kommunalSkattesats;
-  } else if (årsinkomst < 8.08 * PBB) {
+    jsa = (nivå2.basMultiplikator * PBB + nivå2.lutning * (årsinkomst - nivå2.basMultiplikator * PBB) - grundavdrag) * kommunalSkattesats;
+  } else if (årsinkomst < nivå3.maxPBB * PBB) {
     // Nivå 3
-    jsa = (1.813 * PBB + 0.251 * (årsinkomst - 3.24 * PBB) - grundavdrag) * kommunalSkattesats;
+    jsa = (nivå3.basPBB * PBB + nivå3.lutning * (årsinkomst - nivå3.undrePBB * PBB) - grundavdrag) * kommunalSkattesats;
   } else {
     // Nivå 4: tak
-    jsa = (3.027 * PBB - grundavdrag) * kommunalSkattesats;
+    jsa = (nivå4.takPBB * PBB - grundavdrag) * kommunalSkattesats;
   }
 
   return jsa;
@@ -96,10 +98,10 @@ export function beräknaKommunalskatt(årsinkomst, grundavdrag, kommunalSkattesa
  * 3-stegs system med max 1500 SEK.
  * @param {number} årsinkomst
  * @param {number} grundavdrag
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {number} Reduktion i SEK
  */
-export function beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår = 2026) {
+export function beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { UNDRE, ÖVRE, SATS, MAX } = konfig.SKATTEREDUKTION_FÖRVÄRVSINKOMST;
   const beskattningsbarInkomst = årsinkomst - grundavdrag;
@@ -116,10 +118,10 @@ export function beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdra
  * Beräkna statlig inkomstskatt.
  * 20% på inkomst över brytpunkt.
  * @param {number} årsinkomst
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {{ belopp: number, marginalsats: number }}
  */
-export function beräknaStatligSkatt(årsinkomst, inkomstår = 2026) {
+export function beräknaStatligSkatt(årsinkomst, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { BRYTPUNKT, STATLIG_SKATTESATS } = konfig;
 
@@ -138,10 +140,10 @@ export function beräknaStatligSkatt(årsinkomst, inkomstår = 2026) {
  * @param {number} årsinkomst
  * @param {number} grundavdrag
  * @param {string} kommunNamn
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {number} Begravningsavgift i SEK
  */
-export function beräknaBegravningsavgift(årsinkomst, grundavdrag, kommunNamn, inkomstår = 2026) {
+export function beräknaBegravningsavgift(årsinkomst, grundavdrag, kommunNamn, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const sats = kommunNamn === 'Stockholm'
     ? konfig.BEGRAVNINGSAVGIFT_STOCKHOLM
@@ -155,10 +157,10 @@ export function beräknaBegravningsavgift(årsinkomst, grundavdrag, kommunNamn, 
  * sedan offset mot inkomstskatt (om pension > skatt, pension = pension - skatt, annars 0).
  * @param {number} årsinkomst
  * @param {number} inkomstskatt - Beräknad inkomstskatt före pensionsoffset
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {number} Pensionsavgift i SEK
  */
-export function beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår = 2026) {
+export function beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { PBB, PENSIONSAVGIFT } = konfig;
   const minInkomst = Math.ceil((0.423 * PBB) / 100) * 100;
@@ -173,13 +175,12 @@ export function beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår = 2
 
 /**
  * Beräkna public service-avgift.
- * Max 1184 SEK för inkomst över 1.42 * IBB-tröskel.
  * @param {number} årsinkomst
  * @param {number} grundavdrag
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {number} Public service-avgift i SEK
  */
-export function beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår = 2026) {
+export function beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { IBB, PUBLIC_SERVICE_AVGIFT, PUBLIC_SERVICE_MAX, PUBLIC_SERVICE_TRÖSKELMULTIPLIKATOR } = konfig;
   const beskattningsbarInkomst = årsinkomst - grundavdrag;
@@ -195,10 +196,12 @@ export function beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår
 /**
  * Kontrollera om en kommun kvalificerar för regional skattereduktion.
  * @param {string} kommunNamn
+ * @param {number} [inkomstår]
  * @returns {boolean}
  */
-export function harRegionalSkattereduktion(kommunNamn) {
-  return KOMMUNER_MED_REGIONAL_SKATTEREDUKTION.has(kommunNamn);
+export function harRegionalSkattereduktion(kommunNamn, inkomstår = STANDARD_INKOMSTÅR) {
+  const konfig = hämtaKonfig(inkomstår);
+  return konfig.kommunerMedRegionalSkattereduktion.includes(kommunNamn);
 }
 
 /**
@@ -209,10 +212,10 @@ export function harRegionalSkattereduktion(kommunNamn) {
  * @param {number} indata.månadslön - Månadslön i SEK
  * @param {number} indata.kommunalSkattesats - Kommunal skattesats i procent (t.ex. 32.38)
  * @param {string} indata.kommunNamn - Kommunnamn
- * @param {number} [inkomstår=2026]
+ * @param {number} [inkomstår]
  * @returns {object} Fullständig skatteuppdelning med alla komponenter
  */
-export function beräknaSkatteuppdelning(indata, inkomstår = 2026) {
+export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
   const { AGA, VIKTAD_MOMS, REGIONAL_SKATTEREDUKTION_BELOPP } = konfig;
 
@@ -231,8 +234,8 @@ export function beräknaSkatteuppdelning(indata, inkomstår = 2026) {
   const begravningsavgift = beräknaBegravningsavgift(årsinkomst, grundavdrag, indata.kommunNamn, inkomstår);
   const publicServiceAvgift = beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår);
 
-  // Regional reduktion: beräknas synkront (fixar ursprunglig localStorage-bugg)
-  const harRegional = harRegionalSkattereduktion(indata.kommunNamn);
+  // Regional reduktion
+  const harRegional = harRegionalSkattereduktion(indata.kommunNamn, inkomstår);
   const regionalReduktion = harRegional ? REGIONAL_SKATTEREDUKTION_BELOPP : 0;
 
   // Inkomstskatt: kommunalskatt - JSA - skattereduktion förvärvsinkomst + statlig skatt

@@ -14,8 +14,10 @@ import {
   beräknaSkatteuppdelning,
 } from '../js/tax-engine.js';
 
-// PBB = 59200 för 2026
-const PBB = 59200;
+// PBB = 59200 för 2026, 58800 för 2025
+const PBB_2026 = 59200;
+const PBB_2025 = 58800;
+const PBB = PBB_2026;
 const IBB = 83400;
 
 // ─── Grundavdrag ─────────────────────────────────────────────────
@@ -398,5 +400,117 @@ describe('beräknaSkatteuppdelning', () => {
     assert.ok(
       Math.abs(result.totalArbetsgivarkostnad - (result.årsinkomst + result.arbetsgivaravgift)) < 0.01
     );
+  });
+});
+
+// ─── Inkomstår 2025 ──────────────────────────────────────────────
+
+describe('2025: grundavdrag uses 2025 PBB', () => {
+  it('tier 1: different PBB gives different grundavdrag', () => {
+    // 0.423 * 58800 = 24872.4 → ceil(24872.4/100)*100 = 24900
+    assert.equal(beräknaGrundavdrag(50000, 2025), 24900);
+    // 2026: 25100
+    assert.equal(beräknaGrundavdrag(50000, 2026), 25100);
+  });
+
+  it('tier 5: high income', () => {
+    // 0.293 * 58800 = 17228.4 → ceil(17228.4/100)*100 = 17300
+    assert.equal(beräknaGrundavdrag(500000, 2025), 17300);
+  });
+});
+
+describe('2025: jobbskatteavdrag has lower slope and cap', () => {
+  const rate = 0.3241; // 2025 riksgenomsnitt
+
+  it('tier 3 gives lower JSA for 2025 than 2026 (lower slope)', () => {
+    const income = 300000;
+    const ga2025 = beräknaGrundavdrag(income, 2025);
+    const ga2026 = beräknaGrundavdrag(income, 2026);
+    const jsa2025 = beräknaJobbskatteavdrag(income, ga2025, rate, 2025);
+    const jsa2026 = beräknaJobbskatteavdrag(income, ga2026, rate, 2026);
+    assert.ok(jsa2025 < jsa2026, `2025 JSA (${jsa2025}) should be less than 2026 JSA (${jsa2026})`);
+  });
+
+  it('tier 4 cap is lower for 2025', () => {
+    const income = 600000;
+    const ga2025 = beräknaGrundavdrag(income, 2025);
+    const ga2026 = beräknaGrundavdrag(income, 2026);
+    const jsa2025 = beräknaJobbskatteavdrag(income, ga2025, rate, 2025);
+    const jsa2026 = beräknaJobbskatteavdrag(income, ga2026, rate, 2026);
+    // 2025 cap: (2.776*PBB - ga)*rate vs 2026 cap: (3.027*PBB - ga)*rate
+    assert.ok(jsa2025 < jsa2026, `2025 JSA cap (${jsa2025}) should be less than 2026 (${jsa2026})`);
+  });
+});
+
+describe('2025: statlig skatt uses lower brytpunkt', () => {
+  it('income between 2025 and 2026 brytpunkt triggers tax only for 2025', () => {
+    // 2025 brytpunkt: 625800, 2026 brytpunkt: 660400
+    const income = 640000;
+    const result2025 = beräknaStatligSkatt(income, 2025);
+    const result2026 = beräknaStatligSkatt(income, 2026);
+    assert.ok(result2025.belopp > 0, '2025: should have state tax');
+    assert.equal(result2026.belopp, 0, '2026: should have no state tax');
+    assert.ok(Math.abs(result2025.belopp - (640000 - 625800) * 0.2) < 0.01);
+  });
+});
+
+describe('2025: public service max is different', () => {
+  it('returns 2025 max (1249) above threshold', () => {
+    const fee = beräknaPublicServiceAvgift(300000, 17300, 2025);
+    assert.equal(fee, 1249);
+  });
+
+  it('returns 2026 max (1184) above threshold', () => {
+    const fee = beräknaPublicServiceAvgift(300000, 17400, 2026);
+    assert.equal(fee, 1184);
+  });
+});
+
+describe('2025: begravningsavgift uses 2025 rate', () => {
+  it('non-Stockholm uses 0.00293 for 2025', () => {
+    // (300000 - 33800) * 0.00293 = 266200 * 0.00293 = 779.966
+    const ga = beräknaGrundavdrag(300000, 2025); // tier 4: ceil((1.081*58800 - 0.1*300000)/100)*100
+    const fee = beräknaBegravningsavgift(300000, ga, 'Malmö', 2025);
+    assert.ok(fee > 0);
+    assert.ok(Math.abs(fee - (300000 - ga) * 0.00293) < 0.01);
+  });
+});
+
+describe('2025: full breakdown integration', () => {
+  it('baseline: 25000 kr/mo, Riksgenomsnitt', () => {
+    const result = beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.41,
+      kommunNamn: 'Riksgenomsnitt',
+    }, 2025);
+
+    assert.equal(result.årsinkomst, 300000);
+    assert.ok(result.grundavdrag > 0);
+    assert.equal(result.statligSkatt, 0);
+    assert.ok(result.jobbskatteavdrag > 0);
+    assert.ok(result.nettoÅrsinkomst > 0);
+  });
+
+  it('2025 vs 2026 gives different results for same salary', () => {
+    const indata = {
+      månadslön: 40000,
+      kommunalSkattesats: 32.38,
+      kommunNamn: 'Riksgenomsnitt',
+    };
+    const r2025 = beräknaSkatteuppdelning(indata, 2025);
+    const r2026 = beräknaSkatteuppdelning(indata, 2026);
+
+    // Different PBB → different grundavdrag
+    assert.notEqual(r2025.grundavdrag, r2026.grundavdrag);
+    // Different JSA parameters → different jobbskatteavdrag
+    assert.notEqual(r2025.jobbskatteavdrag, r2026.jobbskatteavdrag);
+  });
+
+  it('throws for unsupported year', () => {
+    assert.throws(() => beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.38,
+      kommunNamn: 'Riksgenomsnitt',
+    }, 2020), /stöds inte/);
   });
 });
