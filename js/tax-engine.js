@@ -109,6 +109,7 @@ export function beräknaKommunalskatt(årsinkomst, grundavdrag, kommunalSkattesa
  */
 export function beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
+  if (!konfig.SKATTEREDUKTION_FÖRVÄRVSINKOMST) return 0;
   const { UNDRE, ÖVRE, SATS, MAX } = konfig.SKATTEREDUKTION_FÖRVÄRVSINKOMST;
   const beskattningsbarInkomst = årsinkomst - grundavdrag;
 
@@ -122,7 +123,7 @@ export function beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdra
 
 /**
  * Beräkna statlig inkomstskatt.
- * 20% på inkomst över brytpunkt.
+ * 20% på inkomst över brytpunkt, plus eventuell varnskatt (2018-2019).
  * @param {number} årsinkomst
  * @param {number} [inkomstår]
  * @returns {{ belopp: number, marginalsats: number }}
@@ -131,13 +132,21 @@ export function beräknaStatligSkatt(årsinkomst, inkomstår = STANDARD_INKOMST�
   const konfig = hämtaKonfig(inkomstår);
   const { BRYTPUNKT, STATLIG_SKATTESATS } = konfig;
 
+  let belopp = 0;
+  let marginalsats = 0;
+
   if (årsinkomst > BRYTPUNKT) {
-    return {
-      belopp: (årsinkomst - BRYTPUNKT) * STATLIG_SKATTESATS,
-      marginalsats: STATLIG_SKATTESATS,
-    };
+    belopp = (årsinkomst - BRYTPUNKT) * STATLIG_SKATTESATS;
+    marginalsats = STATLIG_SKATTESATS;
   }
-  return { belopp: 0, marginalsats: 0 };
+
+  // Varnskatt (2018-2019): extra 5% ovanför andra brytpunkten
+  if (konfig.VARNSKATT && årsinkomst > konfig.VARNSKATT.BRYTPUNKT) {
+    belopp += (årsinkomst - konfig.VARNSKATT.BRYTPUNKT) * konfig.VARNSKATT.SKATTESATS;
+    marginalsats += konfig.VARNSKATT.SKATTESATS;
+  }
+
+  return { belopp, marginalsats };
 }
 
 /**
@@ -188,6 +197,7 @@ export function beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår = S
  */
 export function beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
+  if (!konfig.PUBLIC_SERVICE_AVGIFT) return 0;
   const { IBB, PUBLIC_SERVICE_AVGIFT, PUBLIC_SERVICE_MAX, PUBLIC_SERVICE_TRÖSKELMULTIPLIKATOR } = konfig;
   const beskattningsbarInkomst = årsinkomst - grundavdrag;
 
@@ -207,7 +217,27 @@ export function beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår
  */
 export function harRegionalSkattereduktion(kommunNamn, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
+  if (!konfig.kommunerMedRegionalSkattereduktion) return false;
   return konfig.kommunerMedRegionalSkattereduktion.includes(kommunNamn);
+}
+
+/**
+ * Beräkna tillfälligt jobbskatteavdrag (2021-2022).
+ * Infasning 60 000–240 000, max 2 250, utfasning 300 000–500 000.
+ * @param {number} årsinkomst
+ * @param {number} [inkomstår]
+ * @returns {number} Tillfälligt jobbskatteavdrag i SEK
+ */
+export function beräknaTillfälligtJobbskatteavdrag(årsinkomst, inkomstår = STANDARD_INKOMSTÅR) {
+  const konfig = hämtaKonfig(inkomstår);
+  if (!konfig.TILLFÄLLIGT_JOBBSKATTEAVDRAG) return 0;
+  const { infasning, max, utfasning } = konfig.TILLFÄLLIGT_JOBBSKATTEAVDRAG;
+
+  if (årsinkomst <= infasning.undre) return 0;
+  if (årsinkomst <= infasning.övre) return infasning.sats * (årsinkomst - infasning.undre);
+  if (årsinkomst <= utfasning.undre) return max;
+  if (årsinkomst <= utfasning.övre) return max - utfasning.sats * (årsinkomst - utfasning.undre);
+  return 0;
 }
 
 /**
@@ -235,7 +265,8 @@ export function beräknaKyrkoavgift(årsinkomst, grundavdrag, kyrkoavgiftSats) {
  */
 export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅR) {
   const konfig = hämtaKonfig(inkomstår);
-  const { AGA, VIKTAD_MOMS, REGIONAL_SKATTEREDUKTION_BELOPP } = konfig;
+  const { AGA, VIKTAD_MOMS } = konfig;
+  const REGIONAL_SKATTEREDUKTION_BELOPP = konfig.REGIONAL_SKATTEREDUKTION_BELOPP || 0;
 
   const årsinkomst = indata.månadslön * 12;
   const kommunalSkattesats = indata.kommunalSkattesats / 100;
@@ -246,6 +277,7 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
 
   const grundavdrag = beräknaGrundavdrag(årsinkomst, inkomstår);
   const jobbskatteavdrag = beräknaJobbskatteavdrag(årsinkomst, grundavdrag, kommunalSkattesats, inkomstår);
+  const tillfälligtJobbskatteavdrag = beräknaTillfälligtJobbskatteavdrag(årsinkomst, inkomstår);
   const kommunalskatt = beräknaKommunalskatt(årsinkomst, grundavdrag, kommunalSkattesats);
   const skattereduktionFörvärvsinkomst = beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår);
   const statligSkatt = beräknaStatligSkatt(årsinkomst, inkomstår);
@@ -259,8 +291,8 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
   const harRegional = harRegionalSkattereduktion(indata.kommunNamn, inkomstår);
   const regionalReduktion = harRegional ? REGIONAL_SKATTEREDUKTION_BELOPP : 0;
 
-  // Inkomstskatt: kommunalskatt - JSA - skattereduktion förvärvsinkomst + statlig skatt
-  const inkomstskatt = Math.max(0, Math.round(kommunalskatt - jobbskatteavdrag - skattereduktionFörvärvsinkomst + statligSkatt.belopp));
+  // Inkomstskatt: kommunalskatt - JSA - tillfälligt JSA - skattereduktion förvärvsinkomst + statlig skatt
+  const inkomstskatt = Math.max(0, Math.round(kommunalskatt - jobbskatteavdrag - tillfälligtJobbskatteavdrag - skattereduktionFörvärvsinkomst + statligSkatt.belopp));
 
   // Pensionsavgift (beror på inkomstskatt)
   const pensionsavgift = beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår);
@@ -291,6 +323,7 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
     årsinkomst,
     grundavdrag,
     jobbskatteavdrag,
+    tillfälligtJobbskatteavdrag,
     kommunalskatt,
     skattereduktionFörvärvsinkomst,
     statligSkatt: statligSkatt.belopp,

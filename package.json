@@ -1,3 +1,6 @@
 {
-  "type": "module"
+  "type": "module",
+  "devDependencies": {
+    "xlsx": "^0.18.5"
+  }
 }
