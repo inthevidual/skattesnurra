@@ -348,10 +348,10 @@ function ritaMunkdiagram(kategorier, total) {
 
     const lx1 = cx + (outerR + 4) * cosM;
     const ly1 = cy + (outerR + 4) * sinM;
-    const elbowR = outerR + 25;
+    const elbowR = outerR + 18;
     const lx2 = cx + elbowR * cosM;
     const ly2 = cy + elbowR * sinM;
-    const lx3 = right ? cx + elbowR + 40 : cx - elbowR - 40;
+    const lx3 = right ? cx + elbowR + 28 : cx - elbowR - 28;
     const ly3 = ly2;
     const tx = right ? lx3 + 5 : lx3 - 5;
     const anchor = right ? 'start' : 'end';
