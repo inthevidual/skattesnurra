@@ -695,3 +695,109 @@ describe('2024: full breakdown integration', () => {
       `2024 JSA (${r2024.jobbskatteavdrag}) should be less than 2025 (${r2025.jobbskatteavdrag})`);
   });
 });
+
+// ─── Inkomstår 2023 ──────────────────────────────────────────────
+
+describe('2023: grundavdrag uses 2023 PBB', () => {
+  it('tier 1: PBB 52500 gives different grundavdrag', () => {
+    // 0.423 * 52500 = 22207.5 → ceil(22207.5/100)*100 = 22300
+    assert.equal(beräknaGrundavdrag(50000, 2023), 22300);
+  });
+
+  it('tier 5: high income', () => {
+    // 0.293 * 52500 = 15382.5 → ceil(15382.5/100)*100 = 15400
+    assert.equal(beräknaGrundavdrag(500000, 2023), 15400);
+  });
+});
+
+describe('2023: jobbskatteavdrag has lower slope and cap than 2024', () => {
+  const rate = 0.3224; // 2023 riksgenomsnitt
+
+  it('tier 3 gives lower JSA for 2023 than 2024 (lower slope)', () => {
+    const income = 300000;
+    const ga2023 = beräknaGrundavdrag(income, 2023);
+    const ga2024 = beräknaGrundavdrag(income, 2024);
+    const jsa2023 = beräknaJobbskatteavdrag(income, ga2023, rate, 2023);
+    const jsa2024 = beräknaJobbskatteavdrag(income, ga2024, rate, 2024);
+    assert.ok(jsa2023 < jsa2024, `2023 JSA (${jsa2023}) should be less than 2024 JSA (${jsa2024})`);
+  });
+
+  it('tier 4 cap is lower for 2023 than 2024', () => {
+    const income = 600000;
+    const ga2023 = beräknaGrundavdrag(income, 2023);
+    const ga2024 = beräknaGrundavdrag(income, 2024);
+    const jsa2023 = beräknaJobbskatteavdrag(income, ga2023, rate, 2023);
+    const jsa2024 = beräknaJobbskatteavdrag(income, ga2024, rate, 2024);
+    assert.ok(jsa2023 < jsa2024, `2023 JSA cap (${jsa2023}) should be less than 2024 (${jsa2024})`);
+  });
+});
+
+describe('2023: statlig skatt uses lower brytpunkt', () => {
+  it('income between 2023 and 2024 brytpunkt triggers tax only for 2023', () => {
+    // 2023 brytpunkt: 613900, 2024 brytpunkt: 615300
+    const income = 614500;
+    const result2023 = beräknaStatligSkatt(income, 2023);
+    const result2024 = beräknaStatligSkatt(income, 2024);
+    assert.ok(result2023.belopp > 0, '2023: should have state tax');
+    assert.equal(result2024.belopp, 0, '2024: should have no state tax');
+    assert.ok(Math.abs(result2023.belopp - (614500 - 613900) * 0.2) < 0.01);
+  });
+});
+
+describe('2023: public service has higher threshold multiplier', () => {
+  it('returns 2023 max (1300) above threshold', () => {
+    // threshold = 1.75 * 74300 = 130025
+    const fee = beräknaPublicServiceAvgift(300000, 15400, 2023);
+    assert.equal(fee, 1300);
+  });
+});
+
+describe('2023: begravningsavgift uses 2023 rates', () => {
+  it('non-Stockholm uses 0.00258 for 2023', () => {
+    const ga = beräknaGrundavdrag(300000, 2023);
+    const fee = beräknaBegravningsavgift(300000, ga, 'Malmö', 2023);
+    assert.ok(Math.abs(fee - (300000 - ga) * 0.00258) < 0.01);
+  });
+});
+
+describe('2023: full breakdown integration', () => {
+  it('baseline: 25000 kr/mo, Riksgenomsnitt', () => {
+    const result = beräknaSkatteuppdelning({
+      månadslön: 25000,
+      kommunalSkattesats: 32.24,
+      kommunNamn: 'Riksgenomsnitt',
+    }, 2023);
+
+    assert.equal(result.årsinkomst, 300000);
+    assert.ok(result.grundavdrag > 0);
+    assert.equal(result.statligSkatt, 0);
+    assert.ok(result.jobbskatteavdrag > 0);
+    assert.ok(result.nettoÅrsinkomst > 0);
+  });
+
+  it('2023 vs 2024 gives different results for same salary', () => {
+    const indata = {
+      månadslön: 40000,
+      kommunalSkattesats: 32.24,
+      kommunNamn: 'Riksgenomsnitt',
+    };
+    const r2023 = beräknaSkatteuppdelning(indata, 2023);
+    const r2024 = beräknaSkatteuppdelning(indata, 2024);
+
+    assert.notEqual(r2023.grundavdrag, r2024.grundavdrag);
+    assert.notEqual(r2023.jobbskatteavdrag, r2024.jobbskatteavdrag);
+  });
+
+  it('2023 has lower JSA than 2024 at moderate income', () => {
+    const indata = {
+      månadslön: 35000,
+      kommunalSkattesats: 32.24,
+      kommunNamn: 'Riksgenomsnitt',
+    };
+    const r2023 = beräknaSkatteuppdelning(indata, 2023);
+    const r2024 = beräknaSkatteuppdelning(indata, 2024);
+
+    assert.ok(r2023.jobbskatteavdrag < r2024.jobbskatteavdrag,
+      `2023 JSA (${r2023.jobbskatteavdrag}) should be less than 2024 (${r2024.jobbskatteavdrag})`);
+  });
+});
