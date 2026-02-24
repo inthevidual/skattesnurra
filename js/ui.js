@@ -3,28 +3,33 @@ import { formateraAvrundat } from './utils.js?v=0.32';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
+ * Binder händelselyssnare en gång och returnerar en uppdatera()-funktion
+ * som kan anropas upprepade gånger för att byta datakälla.
+ *
  * @param {object} opts
  * @param {HTMLElement} opts.wrapper - Wrapper-div
  * @param {HTMLInputElement} opts.input - Sökfältet
  * @param {HTMLElement} opts.list - UL-element för listan
  * @param {HTMLSelectElement} opts.select - Dold select
- * @param {Array} opts.poster - Dataposter
- * @param {function} opts.etikettFn - post → visningsnamn
- * @param {function} opts.värdeFn - post → option-value
+ * @returns {function} uppdatera(poster, etikettFn, värdeFn) — byt poster
  */
-function skapaVäljare({ wrapper, input, list, select, poster, etikettFn, värdeFn }) {
-  // Fyll dold select
-  select.innerHTML = '';
-  for (const post of poster) {
-    const option = document.createElement('option');
-    option.value = värdeFn(post);
-    option.textContent = etikettFn(post);
-    select.appendChild(option);
-  }
+function skapaVäljare({ wrapper, input, list, select }) {
+  // Aktuellt tillstånd — uppdateras via returnerad funktion
+  let poster = [];
+  let etikettFn = () => '';
+  let värdeFn = () => '';
 
-  // Sätt initial text till första posten
-  if (select.options.length) {
-    input.value = select.options[0].text;
+  function fyllSelect() {
+    select.innerHTML = '';
+    for (const post of poster) {
+      const option = document.createElement('option');
+      option.value = värdeFn(post);
+      option.textContent = etikettFn(post);
+      select.appendChild(option);
+    }
+    if (select.options.length) {
+      input.value = select.options[0].text;
+    }
   }
 
   function byggLista(filter) {
@@ -62,9 +67,7 @@ function skapaVäljare({ wrapper, input, list, select, poster, etikettFn, värde
     select.dispatchEvent(new Event('change'));
   }
 
-  // Rensa gamla lyssnare genom att klona input (enklare vid ombindning)
-  // Vi använder namngivna funktioner och lägger till direkt
-
+  // Bind händelselyssnare en enda gång
   input.addEventListener('focus', () => {
     input.select();
     öppna();
@@ -122,6 +125,15 @@ function skapaVäljare({ wrapper, input, list, select, poster, etikettFn, värde
       input.blur();
     }
   });
+
+  /** Byt poster och fyll om select + input. */
+  return function uppdatera(nyaPoster, nyEtikettFn, nyVärdeFn) {
+    poster = nyaPoster;
+    etikettFn = nyEtikettFn;
+    värdeFn = nyVärdeFn;
+    fyllSelect();
+    stäng();
+  };
 }
 
 /**
@@ -130,16 +142,17 @@ function skapaVäljare({ wrapper, input, list, select, poster, etikettFn, värde
  * @param {number} [inkomstår]
  */
 export function fyllKommunväljare(selectElement, inkomstår = STANDARD_INKOMSTÅR) {
-  skapaVäljare({
+  const uppdatera = skapaVäljare({
     wrapper: document.querySelector('#komm-wrapper'),
     input: document.querySelector('#komm-search'),
     list: document.querySelector('#komm-list'),
     select: selectElement,
-    poster: INKOMSTÅR[inkomstår].kommuner,
-    etikettFn: k => k.namn,
-    värdeFn: k => k.skattesats,
   });
+  uppdatera(INKOMSTÅR[inkomstår].kommuner, k => k.namn, k => k.skattesats);
 }
+
+// Församlingsväljare — skapas en gång, uppdateras vid kommunkbyte
+let _uppdateraFörsamling = null;
 
 /**
  * Fyll församlingsväljaren för vald kommun.
@@ -151,15 +164,15 @@ export function fyllFörsamlingsväljare(selectElement, kommunNamn, inkomstår =
   const data = INKOMSTÅR[inkomstår];
   const församlingar = data.församlingar?.[kommunNamn] || [];
 
-  skapaVäljare({
-    wrapper: document.querySelector('#forsamling-wrapper'),
-    input: document.querySelector('#forsamling-search'),
-    list: document.querySelector('#forsamling-list'),
-    select: selectElement,
-    poster: församlingar,
-    etikettFn: f => f.namn,
-    värdeFn: f => f.kyrkoavgift,
-  });
+  if (!_uppdateraFörsamling) {
+    _uppdateraFörsamling = skapaVäljare({
+      wrapper: document.querySelector('#forsamling-wrapper'),
+      input: document.querySelector('#forsamling-search'),
+      list: document.querySelector('#forsamling-list'),
+      select: selectElement,
+    });
+  }
+  _uppdateraFörsamling(församlingar, f => f.namn, f => f.kyrkoavgift);
 }
 
 /**
