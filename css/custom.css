@@ -1,3 +1,96 @@
+/* CSS custom properties */
+
+:root {
+  --brand-blue-50: #E6F0FA;
+  --brand-blue-100: #B3D4F1;
+  --brand-blue-200: #80B8E8;
+  --brand-blue-300: #4D9CDF;
+  --brand-blue-400: #1A80D6;
+  --brand-blue-500: #0072CE;
+  --brand-blue-600: #005BA5;
+  --brand-blue-700: #00447C;
+  --brand-blue-800: #002E53;
+  --brand-blue-900: #00172A;
+  --brand-blue-950: #000C15;
+  --brand-red-50: #FEE9E8;
+  --brand-red-100: #FDC7C4;
+  --brand-red-200: #FBA5A1;
+  --brand-red-300: #F9837D;
+  --brand-red-400: #F9625B;
+  --brand-red-500: #F9423A;
+  --brand-red-600: #E02A22;
+  --brand-red-700: #AF1F19;
+  --brand-red-800: #7D1612;
+  --brand-red-900: #4B0D0A;
+  --brand-red-950: #2E0806;
+  --brand-violet-50: #F1ECF6;
+  --brand-violet-100: #D9CEE8;
+  --brand-violet-200: #C1B0DA;
+  --brand-violet-300: #A992CC;
+  --brand-violet-400: #9274BE;
+  --brand-violet-500: #7B5EA7;
+  --brand-violet-600: #634B86;
+  --brand-violet-700: #4A3865;
+  --brand-violet-800: #322644;
+  --brand-violet-900: #191323;
+  --brand-violet-950: #0D0A12;
+  --brand-sand-50: #FDFAF5;
+  --brand-sand-100: #F8F0E3;
+  --brand-sand-200: #F3E6D1;
+  --brand-sand-300: #EEDCBF;
+  --brand-sand-400: #E8D5B7;
+  --brand-sand-500: #DBBF97;
+  --brand-sand-600: #C9A471;
+  --brand-sand-700: #A8834E;
+  --brand-sand-800: #7A5F38;
+  --brand-sand-900: #4C3B23;
+  --brand-sand-950: #2E2315;
+  --brand-amber-50: #FEF5E5;
+  --brand-amber-100: #FDE6B8;
+  --brand-amber-200: #FCD78B;
+  --brand-amber-300: #FAC85E;
+  --brand-amber-400: #F9B931;
+  --brand-amber-500: #F5A623;
+  --brand-amber-600: #D18A12;
+  --brand-amber-700: #9E680E;
+  --brand-amber-800: #6B4709;
+  --brand-amber-900: #382505;
+  --brand-amber-950: #1E1403;
+  --brand-wine-50: #F5E6E5;
+  --brand-wine-100: #E4BAB8;
+  --brand-wine-200: #D38E8B;
+  --brand-wine-300: #C2625E;
+  --brand-wine-400: #A73F3B;
+  --brand-wine-500: #8C1D18;
+  --brand-wine-600: #701713;
+  --brand-wine-700: #54110E;
+  --brand-wine-800: #380B09;
+  --brand-wine-900: #1C0605;
+  --brand-wine-950: #0E0302;
+  --brand-green-50: #E7F6F1;
+  --brand-green-100: #BFE9DB;
+  --brand-green-200: #97DCC5;
+  --brand-green-300: #6FCFAF;
+  --brand-green-400: #47C299;
+  --brand-green-500: #2BA784;
+  --brand-green-600: #22866A;
+  --brand-green-700: #1A644F;
+  --brand-green-800: #114335;
+  --brand-green-900: #09211A;
+  --brand-green-950: #04110D;
+  --brand-slate-50: #EDEDEF;
+  --brand-slate-100: #D1D1D6;
+  --brand-slate-200: #B5B5BD;
+  --brand-slate-300: #9999A4;
+  --brand-slate-400: #7D7D8B;
+  --brand-slate-500: #5C5D6E;
+  --brand-slate-600: #4A4A58;
+  --brand-slate-700: #373842;
+  --brand-slate-800: #25252C;
+  --brand-slate-900: #121316;
+  --brand-slate-950: #09090B;
+}
+
 /* Custom styles that Tailwind can't handle */
 
 html {
