@@ -1,4 +1,4 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.50';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.51';
 
 /**
  * Hämta inkomstårkonfiguration.
