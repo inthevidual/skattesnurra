@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/custom.css?v=0.37">
+  <link rel="stylesheet" href="css/custom.css?v=0.38">
 </head>
 <body class="bg-white text-gray-900">
   <main class="max-w-3xl mx-auto px-4 py-8">
@@ -33,15 +33,16 @@
     </section>
 
     <section class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
-      <form id="myForm" class="flex flex-col sm:flex-row gap-4 items-end">
-        <fieldset class="w-auto">
-          <label for="inkomstar" class="block text-base font-medium mb-1">Inkomstår:</label>
+      <form id="myForm">
+        <div class="flex items-center gap-2 mb-4">
+          <label for="inkomstar" class="text-base font-medium">Inkomstår:</label>
           <select id="inkomstar"
                   class="rounded border border-gray-300 px-3 py-2 text-base bg-white">
             <!-- Populated by JS from constants -->
           </select>
-        </fieldset>
+        </div>
 
+        <div class="flex flex-col sm:flex-row gap-4 items-end">
         <fieldset class="flex-1 w-full">
           <label for="komm-search" class="block text-base font-medium mb-1">Kommun:</label>
           <div class="relative" id="komm-wrapper">
@@ -66,6 +67,7 @@
                  class="w-full">
           <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, klicka och fyll i för exakt lön</p>
         </fieldset>
+        </div>
       </form>
 
       <div class="mt-4 flex flex-col sm:flex-row gap-4 items-start">
@@ -104,9 +106,9 @@
   </main>
 
   <footer class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-1.5 text-center text-gray-500" style="font-family:'IBM Plex Mono',monospace;font-size:10px">
-    v0.37 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
+    v0.38 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
   </footer>
 
-  <script type="module" src="js/main.js?v=0.37"></script>
+  <script type="module" src="js/main.js?v=0.38"></script>
 </body>
 </html>

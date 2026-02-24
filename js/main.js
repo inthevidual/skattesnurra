@@ -1,4 +1,4 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.37';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.38';
 import {
   fyllKommunväljare,
   fyllFörsamlingsväljare,
@@ -8,7 +8,7 @@ import {
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=0.37';
+} from './ui.js?v=0.38';
 
 /**
  * Kör skatteberäkningen och visa resultat.
