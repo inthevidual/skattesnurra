@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.51';
-import { formateraAvrundat } from './utils.js?v=0.51';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.52';
+import { formateraAvrundat } from './utils.js?v=0.52';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -494,8 +494,10 @@ export function visaResultat(container, uppdelning) {
     output += tabellrad('Allmän pensionsavgift', -uppdelning.pensionsavgift / 12, false, rowIndex++);
   }
 
-  // Regional reduktion (visas alltid)
-  output += tabellrad('Skattereduktion för boende i vissa områden', uppdelning.regionalReduktion / 12, false, rowIndex++);
+  // Regional reduktion (visas bara om > 0)
+  if (uppdelning.regionalReduktion > 0) {
+    output += tabellrad('Skattereduktion för boende i vissa områden', uppdelning.regionalReduktion / 12, false, rowIndex++);
+  }
 
   if (uppdelning.begravningsavgift > 0) {
     output += tabellrad('Begravningsavgift', -uppdelning.begravningsavgift / 12, false, rowIndex++);
