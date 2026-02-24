@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.35';
-import { formateraAvrundat } from './utils.js?v=0.35';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.36';
+import { formateraAvrundat } from './utils.js?v=0.36';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -58,7 +58,7 @@ function skapaVäljare({ wrapper, input, list, select }) {
   function välj(namn, värde) {
     input.value = namn;
     for (let i = 0; i < select.options.length; i++) {
-      if (select.options[i].value === String(värde)) {
+      if (select.options[i].value === String(värde) && select.options[i].text === namn) {
         select.selectedIndex = i;
         break;
       }
