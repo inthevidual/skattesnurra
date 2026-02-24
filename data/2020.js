@@ -32,6 +32,9 @@ export default {
   PUBLIC_SERVICE_MAX: 1397,
   PUBLIC_SERVICE_TRÖSKELMULTIPLIKATOR: 2.092,
 
+  // Regional skattereduktion
+  REGIONAL_SKATTEREDUKTION_BELOPP: 1675,
+
   // Stockholms kommunalskattesats
   STOCKHOLMS_SKATTESATS: 0.2982,
 
@@ -348,6 +351,17 @@ export default {
     { namn: 'Östra Göinge', skattesats: 32.17 },
     { namn: 'Överkalix', skattesats: 34.14 },
     { namn: 'Övertorneå', skattesats: 33.09 },
+  ],
+
+  kommunerMedRegionalSkattereduktion: [
+    'Avesta', 'Gagnef', 'Hedemora', 'Leksand', 'Ludvika', 'Malung-Sälen', 'Mora', 'Orsa', 'Rättvik', 'Smedjebacken', 'Säter', 'Vansbro', 'Älvdalen',
+    'Bollnäs', 'Hudiksvall', 'Ljusdal', 'Nordanstig', 'Ockelbo', 'Ovanåker', 'Söderhamn',
+    'Berg', 'Bräcke', 'Härjedalen', 'Krokom', 'Ragunda', 'Strömsund', 'Åre', 'Östersund',
+    'Arjeplog', 'Arvidsjaur', 'Boden', 'Gällivare', 'Haparanda', 'Jokkmokk', 'Kalix', 'Kiruna', 'Pajala', 'Piteå', 'Älvsbyn', 'Överkalix', 'Övertorneå',
+    'Arvika', 'Eda', 'Filipstad', 'Hagfors', 'Munkfors', 'Storfors', 'Sunne', 'Säffle', 'Torsby', 'Årjäng',
+    'Bjurholm', 'Dorotea', 'Lycksele', 'Malå', 'Nordmaling', 'Norsjö', 'Robertsfors', 'Skellefteå', 'Sorsele', 'Storuman', 'Vilhelmina', 'Vindeln', 'Vännäs', 'Åsele',
+    'Härnösand', 'Kramfors', 'Sollefteå', 'Timrå', 'Ånge', 'Örnsköldsvik',
+    'Bengtsfors', 'Dals-Ed', 'Färgelanda', 'Mellerud', 'Åmål',
   ],
 
   församlingar: {
