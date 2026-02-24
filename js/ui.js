@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.40';
-import { formateraAvrundat } from './utils.js?v=0.40';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.50';
+import { formateraAvrundat } from './utils.js?v=0.50';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
