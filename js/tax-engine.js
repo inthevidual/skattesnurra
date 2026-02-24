@@ -79,6 +79,12 @@ export function beräknaJobbskatteavdrag(årsinkomst, grundavdrag, kommunalSkatt
     jsa = (nivå4.takPBB * PBB - grundavdrag) * kommunalSkattesats;
   }
 
+  // Avtrappning (phase-out) for years that have it (2023-2024)
+  if (konfig.JSA_AVTRAPPNING && årsinkomst > konfig.JSA_AVTRAPPNING.tröskelPBB * PBB) {
+    jsa -= konfig.JSA_AVTRAPPNING.sats * (årsinkomst - konfig.JSA_AVTRAPPNING.tröskelPBB * PBB);
+    jsa = Math.max(0, jsa);
+  }
+
   return jsa;
 }
 
@@ -273,8 +279,9 @@ export function beräknaSkatteuppdelning(indata, inkomstår = STANDARD_INKOMSTÅ
 
   // Marginalskatt
   const marginalStatligSkattesats = statligSkatt.marginalsats;
+  const jsaAvtrappningSats = (konfig.JSA_AVTRAPPNING && årsinkomst > konfig.JSA_AVTRAPPNING.tröskelPBB * konfig.PBB) ? konfig.JSA_AVTRAPPNING.sats : 0;
   const totalMarginalskatt =
-    (marginalStatligSkattesats + (1 - marginalStatligSkattesats) * VIKTAD_MOMS + AGA) / (1 + AGA);
+    (marginalStatligSkattesats + jsaAvtrappningSats + (1 - marginalStatligSkattesats - jsaAvtrappningSats) * VIKTAD_MOMS + AGA) / (1 + AGA);
 
   // Total skattebörda
   const totalSkatt = moms + arbetsgivaravgift + inkomstskatt + pensionsavgift + begravningsavgift + kyrkoavgift + publicServiceAvgift - regionalReduktion;

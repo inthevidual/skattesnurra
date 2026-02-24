@@ -801,3 +801,71 @@ describe('2023: full breakdown integration', () => {
       `2023 JSA (${r2023.jobbskatteavdrag}) should be less than 2024 (${r2024.jobbskatteavdrag})`);
   });
 });
+
+// ─── JSA avtrappning (phase-out) 2023/2024 ──────────────────────────
+
+describe('JSA avtrappning (phase-out) for 2023 and 2024', () => {
+  const PBB_2023 = 52500;
+  const PBB_2024 = 57300;
+  const rate = 0.3224;
+
+  it('2023: JSA at exactly 13.54 PBB equals tier-4 cap (no phase-out yet)', () => {
+    const income = 13.54 * PBB_2023; // 710850
+    const ga = beräknaGrundavdrag(income, 2023);
+    const jsa = beräknaJobbskatteavdrag(income, ga, rate, 2023);
+    // tier-4 cap: (2.432 * PBB - ga) * rate
+    const expectedCap = (2.432 * PBB_2023 - ga) * rate;
+    assert.ok(Math.abs(jsa - expectedCap) < 1,
+      `JSA (${jsa}) should equal tier-4 cap (${expectedCap}) at threshold`);
+  });
+
+  it('2023: JSA decreases above 13.54 PBB', () => {
+    const belowIncome = 13.54 * PBB_2023;
+    const aboveIncome = 15 * PBB_2023; // 787500
+    const gaBelow = beräknaGrundavdrag(belowIncome, 2023);
+    const gaAbove = beräknaGrundavdrag(aboveIncome, 2023);
+    const jsaBelow = beräknaJobbskatteavdrag(belowIncome, gaBelow, rate, 2023);
+    const jsaAbove = beräknaJobbskatteavdrag(aboveIncome, gaAbove, rate, 2023);
+    assert.ok(jsaAbove < jsaBelow,
+      `JSA above threshold (${jsaAbove}) should be less than at threshold (${jsaBelow})`);
+  });
+
+  it('2024: JSA decreases above 13.54 PBB', () => {
+    const belowIncome = 13.54 * PBB_2024;
+    const aboveIncome = 15 * PBB_2024;
+    const gaBelow = beräknaGrundavdrag(belowIncome, 2024);
+    const gaAbove = beräknaGrundavdrag(aboveIncome, 2024);
+    const jsaBelow = beräknaJobbskatteavdrag(belowIncome, gaBelow, rate, 2024);
+    const jsaAbove = beräknaJobbskatteavdrag(aboveIncome, gaAbove, rate, 2024);
+    assert.ok(jsaAbove < jsaBelow,
+      `JSA above threshold (${jsaAbove}) should be less than at threshold (${jsaBelow})`);
+  });
+
+  it('2023: JSA reaches 0 at sufficiently high income', () => {
+    const income = 40 * PBB_2023; // 2 100 000
+    const ga = beräknaGrundavdrag(income, 2023);
+    const jsa = beräknaJobbskatteavdrag(income, ga, rate, 2023);
+    assert.equal(jsa, 0, 'JSA should be 0 at very high income');
+  });
+
+  it('2025 and 2026 have no phase-out at same PBB-relative income', () => {
+    // At 15 PBB, 2025/2026 should still have full tier-4 JSA (no avtrappning)
+    const PBB_2025x = 58800;
+    const PBB_2026x = 59200;
+    const income2025 = 15 * PBB_2025x;
+    const income2026 = 15 * PBB_2026x;
+
+    const ga2025 = beräknaGrundavdrag(income2025, 2025);
+    const ga2026 = beräknaGrundavdrag(income2026, 2026);
+    const jsa2025 = beräknaJobbskatteavdrag(income2025, ga2025, rate, 2025);
+    const jsa2026 = beräknaJobbskatteavdrag(income2026, ga2026, rate, 2026);
+
+    // For 2025/2026, JSA at 15 PBB should equal the tier-4 cap (no reduction)
+    const cap2025 = (2.776 * PBB_2025x - ga2025) * rate;
+    const cap2026 = (3.027 * PBB_2026x - ga2026) * rate;
+    assert.ok(Math.abs(jsa2025 - cap2025) < 1,
+      `2025 JSA (${jsa2025}) should equal tier-4 cap (${cap2025}), no phase-out`);
+    assert.ok(Math.abs(jsa2026 - cap2026) < 1,
+      `2026 JSA (${jsa2026}) should equal tier-4 cap (${cap2026}), no phase-out`);
+  });
+});

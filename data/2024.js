@@ -55,6 +55,9 @@ export default {
   ],
 
   // Jobbskatteavdragsintervall (lägre lutning i nivå 3 och lägre tak i nivå 4 jämfört med 2025/2026)
+  // Avtrappning av jobbskatteavdrag ovanför 13.54 PBB
+  JSA_AVTRAPPNING: { tröskelPBB: 13.54, sats: 0.03 },
+
   jobbskatteavdragIntervall: [
     { minPBB: 0, maxPBB: 0.91, typ: 'linjär' },
     { minPBB: 0.91, maxPBB: 3.24, basMultiplikator: 0.91, lutning: 0.3874 },
