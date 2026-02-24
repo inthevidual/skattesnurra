@@ -1,105 +1,105 @@
-import { calculateTaxBreakdown } from './tax-engine.js?v=0.31';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.31';
 import {
-  populateMunicipalityDropdown,
-  readFormValues,
-  applyUrlParameters,
-  renderResults,
-  renderError,
-  renderZeroState,
+  fyllKommunväljare,
+  läsFormulärVärden,
+  tillämpUrlParametrar,
+  visaResultat,
+  visaFelmeddelande,
+  visaNollläge,
 } from './ui.js?v=0.31';
 
 /**
- * Run the tax calculation and render results.
+ * Kör skatteberäkningen och visa resultat.
  * @param {HTMLFormElement} form
- * @param {HTMLElement} resultsContainer
+ * @param {HTMLElement} resultatBehållare
  */
-// When the user types an exact salary, store it here so it overrides the slider's rounded value.
-let exactSalary = null;
+// När användaren skriver en exakt lön, spara den här så att den åsidosätter reglagets avrundade värde.
+let exaktLön = null;
 
-function calculate(form, resultsContainer) {
-  const values = readFormValues(form);
-  if (exactSalary !== null) values.monthlySalary = exactSalary;
+function beräkna(form, resultatBehållare) {
+  const värden = läsFormulärVärden(form);
+  if (exaktLön !== null) värden.månadslön = exaktLön;
 
-  if (values.monthlySalary == null || isNaN(values.monthlySalary) || values.monthlySalary < 0) {
-    resultsContainer.innerHTML = '';
+  if (värden.månadslön == null || isNaN(värden.månadslön) || värden.månadslön < 0) {
+    resultatBehållare.innerHTML = '';
     return;
   }
 
-  if (values.monthlySalary === 0) {
-    renderZeroState(resultsContainer);
+  if (värden.månadslön === 0) {
+    visaNollläge(resultatBehållare);
     return;
   }
 
-  const breakdown = calculateTaxBreakdown(values);
+  const uppdelning = beräknaSkatteuppdelning(värden);
 
-  if (!breakdown) {
-    renderError(resultsContainer, 'Skriv bara siffror utan mellanslag eller kommatecken.');
+  if (!uppdelning) {
+    visaFelmeddelande(resultatBehållare, 'Skriv bara siffror utan mellanslag eller kommatecken.');
     return;
   }
 
-  renderResults(resultsContainer, breakdown);
+  visaResultat(resultatBehållare, uppdelning);
 }
 
 /**
- * Format a number with thin-space thousands separators for the editable input.
- * Uses actual Unicode thin space (not HTML entity) since this goes into an input value.
+ * Formatera ett tal med smala blanksteg som tusentalsavgränsare för redigerbart fält.
+ * Använder Unicode tunt blanksteg (inte HTML-entitet) eftersom det går in i ett input-värde.
  */
-function formatInputValue(n) {
+function formateraInmatning(n) {
   return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '\u2009');
 }
 
 /**
- * Parse a salary string back to a number, stripping any whitespace.
+ * Tolka en lönesträng tillbaka till ett tal, ta bort alla blanksteg.
  */
-function parseSalary(str) {
-  return Number(str.replace(/\s/g, ''));
+function tolkLön(sträng) {
+  return Number(sträng.replace(/\s/g, ''));
 }
 
-function init() {
+function initiera() {
   const form = document.querySelector('#myForm');
   const selectElement = form.querySelector('#komm');
   const slider = form.querySelector('#lon');
   const edit = document.querySelector('#lon-edit');
-  const resultsContainer = document.querySelector('#resultat');
+  const resultatBehållare = document.querySelector('#resultat');
 
-  // Populate municipality dropdown from constants
-  populateMunicipalityDropdown(selectElement);
+  // Fyll kommunväljaren från konstanter
+  fyllKommunväljare(selectElement);
 
-  // Apply URL parameters (e.g. ?manadslon=25000)
-  applyUrlParameters(form);
+  // Tillämpa URL-parametrar (t.ex. ?manadslon=25000)
+  tillämpUrlParametrar(form);
 
-  function syncFromSlider() {
-    exactSalary = null;
-    edit.value = formatInputValue(Number(slider.value));
-    calculate(form, resultsContainer);
+  function synkaFrånReglage() {
+    exaktLön = null;
+    edit.value = formateraInmatning(Number(slider.value));
+    beräkna(form, resultatBehållare);
   }
 
-  function syncFromEdit() {
-    let val = parseSalary(edit.value);
+  function synkaFrånInmatning() {
+    let val = tolkLön(edit.value);
     if (isNaN(val) || val < 0) val = 0;
     if (val > 100000) val = 100000;
-    exactSalary = val;
+    exaktLön = val;
     slider.value = Math.round(val / 1000) * 1000;
-    edit.value = formatInputValue(val);
-    calculate(form, resultsContainer);
+    edit.value = formateraInmatning(val);
+    beräkna(form, resultatBehållare);
   }
 
-  slider.addEventListener('input', syncFromSlider);
+  slider.addEventListener('input', synkaFrånReglage);
 
-  edit.addEventListener('change', syncFromEdit);
-  edit.addEventListener('blur', syncFromEdit);
+  edit.addEventListener('change', synkaFrånInmatning);
+  edit.addEventListener('blur', synkaFrånInmatning);
 
-  // Debounced live update while typing (helps iOS Safari)
-  let editTimer = null;
+  // Fördröjd liveuppdatering medan användaren skriver (hjälper iOS Safari)
+  let inmatningsTimer = null;
   edit.addEventListener('input', () => {
-    clearTimeout(editTimer);
-    editTimer = setTimeout(() => {
-      let val = parseSalary(edit.value);
+    clearTimeout(inmatningsTimer);
+    inmatningsTimer = setTimeout(() => {
+      let val = tolkLön(edit.value);
       if (!isNaN(val) && val >= 0) {
         if (val > 100000) val = 100000;
-        exactSalary = val;
+        exaktLön = val;
         slider.value = Math.round(val / 1000) * 1000;
-        calculate(form, resultsContainer);
+        beräkna(form, resultatBehållare);
       }
     }, 400);
   });
@@ -107,23 +107,23 @@ function init() {
   edit.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      clearTimeout(editTimer);
-      syncFromEdit();
+      clearTimeout(inmatningsTimer);
+      synkaFrånInmatning();
       edit.blur();
     }
   });
 
-  // Prevent form submit
+  // Förhindra formulärinskick
   form.addEventListener('submit', (event) => {
     event.preventDefault();
   });
 
-  // Recalculate when municipality changes
-  selectElement.addEventListener('change', syncFromSlider);
+  // Räkna om när kommun ändras
+  selectElement.addEventListener('change', synkaFrånReglage);
 
-  // Initial sync + calculation
-  edit.value = formatInputValue(Number(slider.value));
-  calculate(form, resultsContainer);
+  // Initial synkronisering + beräkning
+  edit.value = formateraInmatning(Number(slider.value));
+  beräkna(form, resultatBehållare);
 }
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', initiera);

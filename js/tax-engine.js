@@ -1,44 +1,44 @@
 import {
-  TAX_YEAR_2026,
-  GRUNDAVDRAG_BRACKETS,
-  JOBBSKATTEAVDRAG_BRACKETS,
-  REGIONAL_REDUCTION_MUNICIPALITIES,
+  INKOMSTÅR_2026,
+  GRUNDAVDRAG_INTERVALL,
+  JOBBSKATTEAVDRAG_INTERVALL,
+  KOMMUNER_MED_REGIONAL_SKATTEREDUKTION,
 } from './constants.js';
 
 /**
- * Get tax year config. Currently only 2026 is supported.
- * @param {number} [taxYear=2026]
+ * Hämta inkomstårkonfiguration. Enbart 2026 stöds.
+ * @param {number} [inkomstår=2026]
  * @returns {object}
  */
-function getConfig(taxYear = 2026) {
-  if (taxYear !== 2026) {
-    throw new Error(`Tax year ${taxYear} is not supported`);
+function hämtaKonfig(inkomstår = 2026) {
+  if (inkomstår !== 2026) {
+    throw new Error(`Inkomstår ${inkomstår} stöds inte`);
   }
-  return TAX_YEAR_2026;
+  return INKOMSTÅR_2026;
 }
 
 /**
- * Calculate grundavdrag (basic deduction).
- * 5-tier bracket system, result rounded up to nearest 100.
- * @param {number} annualIncome - Gross annual income in SEK
- * @param {number} [taxYear=2026]
- * @returns {number} Grundavdrag in SEK
+ * Beräkna grundavdrag (basavdrag).
+ * 5-stegs intervallsystem, resultat avrundat uppåt till närmaste 100.
+ * @param {number} årsinkomst - Bruttoinkomst per år i SEK
+ * @param {number} [inkomstår=2026]
+ * @returns {number} Grundavdrag i SEK
  */
-export function calculateGrundavdrag(annualIncome, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { PBB } = config;
+export function beräknaGrundavdrag(årsinkomst, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { PBB } = konfig;
 
-  if (annualIncome <= 0) return 0;
+  if (årsinkomst <= 0) return 0;
 
-  for (const bracket of GRUNDAVDRAG_BRACKETS) {
-    const min = bracket.minPBB * PBB;
-    const max = bracket.maxPBB * PBB;
+  for (const intervall of GRUNDAVDRAG_INTERVALL) {
+    const min = intervall.minPBB * PBB;
+    const max = intervall.maxPBB * PBB;
 
-    if (annualIncome >= min && (annualIncome < max || bracket.maxPBB === Infinity)) {
-      if (bracket.coefficient !== undefined) {
-        return Math.ceil((bracket.coefficient * PBB) / 100) * 100;
+    if (årsinkomst >= min && (årsinkomst < max || intervall.maxPBB === Infinity)) {
+      if (intervall.koefficient !== undefined) {
+        return Math.ceil((intervall.koefficient * PBB) / 100) * 100;
       }
-      return Math.ceil((bracket.baseCoefficient * PBB + bracket.incomeCoefficient * annualIncome) / 100) * 100;
+      return Math.ceil((intervall.basKoefficient * PBB + intervall.inkomstKoefficient * årsinkomst) / 100) * 100;
     }
   }
 
@@ -46,240 +46,240 @@ export function calculateGrundavdrag(annualIncome, taxYear = 2026) {
 }
 
 /**
- * Calculate jobbskatteavdrag (employment tax credit).
- * 4-tier bracket system.
- * @param {number} annualIncome - Gross annual income in SEK
- * @param {number} grundavdrag - Basic deduction in SEK
- * @param {number} municipalTaxRate - Municipal tax rate as decimal (e.g. 0.3238)
- * @param {number} [taxYear=2026]
- * @returns {number} Jobbskatteavdrag in SEK
+ * Beräkna jobbskatteavdrag.
+ * 4-stegs intervallsystem.
+ * @param {number} årsinkomst - Bruttoinkomst per år i SEK
+ * @param {number} grundavdrag - Grundavdrag i SEK
+ * @param {number} kommunalSkattesats - Kommunal skattesats som decimal (t.ex. 0.3238)
+ * @param {number} [inkomstår=2026]
+ * @returns {number} Jobbskatteavdrag i SEK
  */
-export function calculateJobbskatteavdrag(annualIncome, grundavdrag, municipalTaxRate, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { PBB } = config;
+export function beräknaJobbskatteavdrag(årsinkomst, grundavdrag, kommunalSkattesats, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { PBB } = konfig;
 
-  if (annualIncome <= 0) return 0;
+  if (årsinkomst <= 0) return 0;
 
   let jsa = 0;
 
-  if (annualIncome < 0.91 * PBB) {
-    // Tier 1: linear
-    jsa = (annualIncome - grundavdrag) * municipalTaxRate;
+  if (årsinkomst < 0.91 * PBB) {
+    // Nivå 1: linjär
+    jsa = (årsinkomst - grundavdrag) * kommunalSkattesats;
     return Math.max(0, jsa);
-  } else if (annualIncome < 3.24 * PBB) {
-    // Tier 2
-    jsa = (0.91 * PBB + 0.3874 * (annualIncome - 0.91 * PBB) - grundavdrag) * municipalTaxRate;
-  } else if (annualIncome < 8.08 * PBB) {
-    // Tier 3
-    jsa = (1.813 * PBB + 0.251 * (annualIncome - 3.24 * PBB) - grundavdrag) * municipalTaxRate;
+  } else if (årsinkomst < 3.24 * PBB) {
+    // Nivå 2
+    jsa = (0.91 * PBB + 0.3874 * (årsinkomst - 0.91 * PBB) - grundavdrag) * kommunalSkattesats;
+  } else if (årsinkomst < 8.08 * PBB) {
+    // Nivå 3
+    jsa = (1.813 * PBB + 0.251 * (årsinkomst - 3.24 * PBB) - grundavdrag) * kommunalSkattesats;
   } else {
-    // Tier 4: capped
-    jsa = (3.027 * PBB - grundavdrag) * municipalTaxRate;
+    // Nivå 4: tak
+    jsa = (3.027 * PBB - grundavdrag) * kommunalSkattesats;
   }
 
   return jsa;
 }
 
 /**
- * Calculate municipal tax (kommunalskatt) before JSA.
- * @param {number} annualIncome
+ * Beräkna kommunalskatt före jobbskatteavdrag.
+ * @param {number} årsinkomst
  * @param {number} grundavdrag
- * @param {number} municipalTaxRate - As decimal (e.g. 0.3238)
- * @returns {number} Municipal tax in SEK
+ * @param {number} kommunalSkattesats - Som decimal (t.ex. 0.3238)
+ * @returns {number} Kommunalskatt i SEK
  */
-export function calculateMunicipalTax(annualIncome, grundavdrag, municipalTaxRate) {
-  return Math.max(0, Math.round((annualIncome - grundavdrag) * municipalTaxRate));
+export function beräknaKommunalskatt(årsinkomst, grundavdrag, kommunalSkattesats) {
+  return Math.max(0, Math.round((årsinkomst - grundavdrag) * kommunalSkattesats));
 }
 
 /**
- * Calculate skattereduktion för förvärvsinkomst (employment income reduction).
- * 3-tier system with max 1500 SEK.
- * @param {number} annualIncome
+ * Beräkna skattereduktion för förvärvsinkomst.
+ * 3-stegs system med max 1500 SEK.
+ * @param {number} årsinkomst
  * @param {number} grundavdrag
- * @param {number} [taxYear=2026]
- * @returns {number} Reduction in SEK
+ * @param {number} [inkomstår=2026]
+ * @returns {number} Reduktion i SEK
  */
-export function calculateEmploymentIncomeReduction(annualIncome, grundavdrag, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { LOWER, UPPER, RATE, MAX } = config.EMPLOYMENT_INCOME_REDUCTION;
-  const taxableIncome = annualIncome - grundavdrag;
+export function beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { UNDRE, ÖVRE, SATS, MAX } = konfig.SKATTEREDUKTION_FÖRVÄRVSINKOMST;
+  const beskattningsbarInkomst = årsinkomst - grundavdrag;
 
-  if (taxableIncome <= LOWER) {
+  if (beskattningsbarInkomst <= UNDRE) {
     return 0;
-  } else if (taxableIncome <= UPPER) {
-    return RATE * (taxableIncome - LOWER);
+  } else if (beskattningsbarInkomst <= ÖVRE) {
+    return SATS * (beskattningsbarInkomst - UNDRE);
   }
   return MAX;
 }
 
 /**
- * Calculate statlig inkomstskatt (state income tax).
- * 20% on income above brytpunkt.
- * @param {number} annualIncome
- * @param {number} [taxYear=2026]
- * @returns {{ amount: number, marginalRate: number }}
+ * Beräkna statlig inkomstskatt.
+ * 20% på inkomst över brytpunkt.
+ * @param {number} årsinkomst
+ * @param {number} [inkomstår=2026]
+ * @returns {{ belopp: number, marginalsats: number }}
  */
-export function calculateStateTax(annualIncome, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { BRYTPUNKT, STATE_TAX_RATE } = config;
+export function beräknaStatligSkatt(årsinkomst, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { BRYTPUNKT, STATLIG_SKATTESATS } = konfig;
 
-  if (annualIncome > BRYTPUNKT) {
+  if (årsinkomst > BRYTPUNKT) {
     return {
-      amount: (annualIncome - BRYTPUNKT) * STATE_TAX_RATE,
-      marginalRate: STATE_TAX_RATE,
+      belopp: (årsinkomst - BRYTPUNKT) * STATLIG_SKATTESATS,
+      marginalsats: STATLIG_SKATTESATS,
     };
   }
-  return { amount: 0, marginalRate: 0 };
+  return { belopp: 0, marginalsats: 0 };
 }
 
 /**
- * Calculate begravningsavgift (burial fee).
- * Stockholm has a special lower rate.
- * @param {number} annualIncome
+ * Beräkna begravningsavgift.
+ * Stockholm har en särskild lägre avgift.
+ * @param {number} årsinkomst
  * @param {number} grundavdrag
- * @param {string} municipalityName
- * @param {number} [taxYear=2026]
- * @returns {number} Burial fee in SEK
+ * @param {string} kommunNamn
+ * @param {number} [inkomstår=2026]
+ * @returns {number} Begravningsavgift i SEK
  */
-export function calculateBurialFee(annualIncome, grundavdrag, municipalityName, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const rate = municipalityName === 'Stockholm'
-    ? config.BURIAL_FEE_STOCKHOLM
-    : config.BURIAL_FEE_DEFAULT;
-  return Math.max(0, (annualIncome - grundavdrag) * rate);
+export function beräknaBegravningsavgift(årsinkomst, grundavdrag, kommunNamn, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const sats = kommunNamn === 'Stockholm'
+    ? konfig.BEGRAVNINGSAVGIFT_STOCKHOLM
+    : konfig.BEGRAVNINGSAVGIFT_STANDARD;
+  return Math.max(0, (årsinkomst - grundavdrag) * sats);
 }
 
 /**
- * Calculate allmän pensionsavgift (general pension contribution).
- * Complex rounding: floor income to 100, compute 7%, round to 100,
- * then offset by income tax (if pension > tax, pension = pension - tax, else 0).
- * @param {number} annualIncome
- * @param {number} incomeTax - The computed income tax (skatt) before pension offset
- * @param {number} [taxYear=2026]
- * @returns {number} Pension contribution in SEK
+ * Beräkna allmän pensionsavgift.
+ * Komplex avrundning: golv inkomst till 100, beräkna 7%, avrunda till 100,
+ * sedan offset mot inkomstskatt (om pension > skatt, pension = pension - skatt, annars 0).
+ * @param {number} årsinkomst
+ * @param {number} inkomstskatt - Beräknad inkomstskatt före pensionsoffset
+ * @param {number} [inkomstår=2026]
+ * @returns {number} Pensionsavgift i SEK
  */
-export function calculatePensionContribution(annualIncome, incomeTax, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { PBB, PENSION_RATE } = config;
-  const minIncome = Math.ceil((0.423 * PBB) / 100) * 100;
+export function beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { PBB, PENSIONSAVGIFT } = konfig;
+  const minInkomst = Math.ceil((0.423 * PBB) / 100) * 100;
 
-  if (annualIncome < minIncome) return 0;
+  if (årsinkomst < minInkomst) return 0;
 
-  const pension = Math.round((PENSION_RATE * Math.floor(annualIncome / 100) * 100) / 100) * 100;
+  const pension = Math.round((PENSIONSAVGIFT * Math.floor(årsinkomst / 100) * 100) / 100) * 100;
 
-  if (pension < incomeTax) return 0;
-  return pension - incomeTax;
+  if (pension < inkomstskatt) return 0;
+  return pension - inkomstskatt;
 }
 
 /**
- * Calculate public service-avgift.
- * Capped at 1184 SEK for income above 1.42 * IBB threshold.
- * @param {number} annualIncome
+ * Beräkna public service-avgift.
+ * Max 1184 SEK för inkomst över 1.42 * IBB-tröskel.
+ * @param {number} årsinkomst
  * @param {number} grundavdrag
- * @param {number} [taxYear=2026]
- * @returns {number} Public service fee in SEK
+ * @param {number} [inkomstår=2026]
+ * @returns {number} Public service-avgift i SEK
  */
-export function calculatePublicServiceFee(annualIncome, grundavdrag, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { IBB, PUBLIC_SERVICE_RATE, PUBLIC_SERVICE_MAX, PUBLIC_SERVICE_THRESHOLD_MULTIPLIER } = config;
-  const taxableIncome = annualIncome - grundavdrag;
+export function beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { IBB, PUBLIC_SERVICE_AVGIFT, PUBLIC_SERVICE_MAX, PUBLIC_SERVICE_TRÖSKELMULTIPLIKATOR } = konfig;
+  const beskattningsbarInkomst = årsinkomst - grundavdrag;
 
-  if (taxableIncome <= 0) return 0;
+  if (beskattningsbarInkomst <= 0) return 0;
 
-  if (taxableIncome <= PUBLIC_SERVICE_THRESHOLD_MULTIPLIER * IBB) {
-    return Math.max(0, PUBLIC_SERVICE_RATE * taxableIncome);
+  if (beskattningsbarInkomst <= PUBLIC_SERVICE_TRÖSKELMULTIPLIKATOR * IBB) {
+    return Math.max(0, PUBLIC_SERVICE_AVGIFT * beskattningsbarInkomst);
   }
   return PUBLIC_SERVICE_MAX;
 }
 
 /**
- * Check if a municipality qualifies for regional residence tax reduction.
- * @param {string} municipalityName
+ * Kontrollera om en kommun kvalificerar för regional skattereduktion.
+ * @param {string} kommunNamn
  * @returns {boolean}
  */
-export function isRegionalReductionEligible(municipalityName) {
-  return REGIONAL_REDUCTION_MUNICIPALITIES.has(municipalityName);
+export function harRegionalSkattereduktion(kommunNamn) {
+  return KOMMUNER_MED_REGIONAL_SKATTEREDUKTION.has(kommunNamn);
 }
 
 /**
- * Calculate complete tax breakdown for a given income and municipality.
- * This is the main orchestrator function replacing the original `raknaut()`.
+ * Beräkna fullständig skatteuppdelning för given inkomst och kommun.
+ * Huvudfunktionen som ersätter ursprunglig `raknaut()`.
  *
- * @param {object} input
- * @param {number} input.monthlySalary - Monthly salary in SEK
- * @param {number} input.municipalTaxRate - Municipal tax rate as percentage (e.g. 32.38)
- * @param {string} input.municipalityName - Municipality name
- * @param {number} [taxYear=2026]
- * @returns {object} Full tax breakdown with all components
+ * @param {object} indata
+ * @param {number} indata.månadslön - Månadslön i SEK
+ * @param {number} indata.kommunalSkattesats - Kommunal skattesats i procent (t.ex. 32.38)
+ * @param {string} indata.kommunNamn - Kommunnamn
+ * @param {number} [inkomstår=2026]
+ * @returns {object} Fullständig skatteuppdelning med alla komponenter
  */
-export function calculateTaxBreakdown(input, taxYear = 2026) {
-  const config = getConfig(taxYear);
-  const { AGA, WEIGHTED_VAT, REGIONAL_REDUCTION_AMOUNT } = config;
+export function beräknaSkatteuppdelning(indata, inkomstår = 2026) {
+  const konfig = hämtaKonfig(inkomstår);
+  const { AGA, VIKTAD_MOMS, REGIONAL_SKATTEREDUKTION_BELOPP } = konfig;
 
-  const annualIncome = input.monthlySalary * 12;
-  const municipalTaxRate = input.municipalTaxRate / 100;
+  const årsinkomst = indata.månadslön * 12;
+  const kommunalSkattesats = indata.kommunalSkattesats / 100;
 
-  if (annualIncome <= 0) {
+  if (årsinkomst <= 0) {
     return null;
   }
 
-  const grundavdrag = calculateGrundavdrag(annualIncome, taxYear);
-  const jobbskatteavdrag = calculateJobbskatteavdrag(annualIncome, grundavdrag, municipalTaxRate, taxYear);
-  const municipalTax = calculateMunicipalTax(annualIncome, grundavdrag, municipalTaxRate);
-  const employmentIncomeReduction = calculateEmploymentIncomeReduction(annualIncome, grundavdrag, taxYear);
-  const stateTax = calculateStateTax(annualIncome, taxYear);
-  const burialFee = calculateBurialFee(annualIncome, grundavdrag, input.municipalityName, taxYear);
-  const publicServiceFee = calculatePublicServiceFee(annualIncome, grundavdrag, taxYear);
+  const grundavdrag = beräknaGrundavdrag(årsinkomst, inkomstår);
+  const jobbskatteavdrag = beräknaJobbskatteavdrag(årsinkomst, grundavdrag, kommunalSkattesats, inkomstår);
+  const kommunalskatt = beräknaKommunalskatt(årsinkomst, grundavdrag, kommunalSkattesats);
+  const skattereduktionFörvärvsinkomst = beräknaSkattereduktionFörvärvsinkomst(årsinkomst, grundavdrag, inkomstår);
+  const statligSkatt = beräknaStatligSkatt(årsinkomst, inkomstår);
+  const begravningsavgift = beräknaBegravningsavgift(årsinkomst, grundavdrag, indata.kommunNamn, inkomstår);
+  const publicServiceAvgift = beräknaPublicServiceAvgift(årsinkomst, grundavdrag, inkomstår);
 
-  // Regional reduction: computed synchronously (fixes original localStorage bug)
-  const regionalReductionEligible = isRegionalReductionEligible(input.municipalityName);
-  const regionalReduction = regionalReductionEligible ? REGIONAL_REDUCTION_AMOUNT : 0;
+  // Regional reduktion: beräknas synkront (fixar ursprunglig localStorage-bugg)
+  const harRegional = harRegionalSkattereduktion(indata.kommunNamn);
+  const regionalReduktion = harRegional ? REGIONAL_SKATTEREDUKTION_BELOPP : 0;
 
-  // Income tax (skatt): municipal tax - JSA - employment reduction + state tax
-  const incomeTax = Math.max(0, Math.round(municipalTax - jobbskatteavdrag - employmentIncomeReduction + stateTax.amount));
+  // Inkomstskatt: kommunalskatt - JSA - skattereduktion förvärvsinkomst + statlig skatt
+  const inkomstskatt = Math.max(0, Math.round(kommunalskatt - jobbskatteavdrag - skattereduktionFörvärvsinkomst + statligSkatt.belopp));
 
-  // Pension contribution (depends on income tax)
-  const pensionContribution = calculatePensionContribution(annualIncome, incomeTax, taxYear);
+  // Pensionsavgift (beror på inkomstskatt)
+  const pensionsavgift = beräknaPensionsavgift(årsinkomst, inkomstskatt, inkomstår);
 
-  // Net income after tax
-  const netAnnualIncome = Math.round(
-    annualIncome - incomeTax - pensionContribution - burialFee - publicServiceFee + regionalReduction
+  // Nettoinkomst efter skatt
+  const nettoÅrsinkomst = Math.round(
+    årsinkomst - inkomstskatt - pensionsavgift - begravningsavgift - publicServiceAvgift + regionalReduktion
   );
 
-  // Employer costs
-  const employerContribution = annualIncome * AGA;
-  const totalEmployerCost = annualIncome + employerContribution;
+  // Arbetsgivarkostnader
+  const arbetsgivaravgift = årsinkomst * AGA;
+  const totalArbetsgivarkostnad = årsinkomst + arbetsgivaravgift;
 
-  // VAT and total tax
-  const vat = WEIGHTED_VAT * netAnnualIncome;
+  // Moms och total skatt
+  const moms = VIKTAD_MOMS * nettoÅrsinkomst;
 
-  // Marginal tax rate
-  const marginalStateTaxRate = stateTax.marginalRate;
-  const totalMarginalTaxRate =
-    (marginalStateTaxRate + (1 - marginalStateTaxRate) * WEIGHTED_VAT + AGA) / (1 + AGA);
+  // Marginalskatt
+  const marginalStatligSkattesats = statligSkatt.marginalsats;
+  const totalMarginalskatt =
+    (marginalStatligSkattesats + (1 - marginalStatligSkattesats) * VIKTAD_MOMS + AGA) / (1 + AGA);
 
-  // Total tax burden
-  const totalTax = vat + employerContribution + incomeTax + pensionContribution + burialFee + publicServiceFee - regionalReduction;
-  const averageTaxRate = totalTax / totalEmployerCost;
+  // Total skattebörda
+  const totalSkatt = moms + arbetsgivaravgift + inkomstskatt + pensionsavgift + begravningsavgift + publicServiceAvgift - regionalReduktion;
+  const genomsnittligSkattesats = totalSkatt / totalArbetsgivarkostnad;
 
   return {
-    annualIncome,
+    årsinkomst,
     grundavdrag,
     jobbskatteavdrag,
-    municipalTax,
-    employmentIncomeReduction,
-    stateTax: stateTax.amount,
-    burialFee,
-    pensionContribution,
-    publicServiceFee,
-    regionalReduction,
-    incomeTax,
-    netAnnualIncome,
-    employerContribution,
-    totalEmployerCost,
-    vat,
-    totalMarginalTaxRate,
-    totalTax,
-    averageTaxRate,
+    kommunalskatt,
+    skattereduktionFörvärvsinkomst,
+    statligSkatt: statligSkatt.belopp,
+    begravningsavgift,
+    pensionsavgift,
+    publicServiceAvgift,
+    regionalReduktion,
+    inkomstskatt,
+    nettoÅrsinkomst,
+    arbetsgivaravgift,
+    totalArbetsgivarkostnad,
+    moms,
+    totalMarginalskatt,
+    totalSkatt,
+    genomsnittligSkattesats,
   };
 }
