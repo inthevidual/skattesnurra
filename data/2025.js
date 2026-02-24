@@ -13,6 +13,9 @@ export default {
   BEGRAVNINGSAVGIFT_STANDARD: 0.00293,
   BEGRAVNINGSAVGIFT_STOCKHOLM: 0.0007,
 
+  // Kyrkoavgift riksgenomsnitt (snitt av alla församlingar)
+  KYRKOAVGIFT_RIKSGENOMSNITT: 1.23,
+
   // Statlig skatt
   STATLIG_SKATTESATS: 0.20,
   BRYTPUNKT: 625800,

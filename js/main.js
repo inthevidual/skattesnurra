@@ -1,4 +1,4 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.33';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.34';
 import {
   fyllKommunväljare,
   fyllFörsamlingsväljare,
@@ -7,7 +7,7 @@ import {
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=0.33';
+} from './ui.js?v=0.34';
 
 /**
  * Kör skatteberäkningen och visa resultat.
@@ -124,15 +124,26 @@ function initiera() {
   const församlingFieldset = document.querySelector('#forsamling-fieldset');
   const församlingSelect = document.querySelector('#forsamling');
 
+  function hämtaKommunNamn() {
+    return selectElement.options[selectElement.selectedIndex].text;
+  }
+
+  function harFörsamlingar() {
+    return hämtaKommunNamn() !== 'Riksgenomsnitt';
+  }
+
   function uppdateraFörsamlingsväljare() {
-    const kommunNamn = selectElement.options[selectElement.selectedIndex].text;
-    fyllFörsamlingsväljare(församlingSelect, kommunNamn);
+    if (harFörsamlingar()) {
+      fyllFörsamlingsväljare(församlingSelect, hämtaKommunNamn());
+      församlingFieldset.classList.remove('hidden');
+    } else {
+      församlingFieldset.classList.add('hidden');
+    }
   }
 
   kyrkomedlem.addEventListener('change', () => {
     if (kyrkomedlem.checked) {
       uppdateraFörsamlingsväljare();
-      församlingFieldset.classList.remove('hidden');
     } else {
       församlingFieldset.classList.add('hidden');
     }

@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.33';
-import { formateraAvrundat } from './utils.js?v=0.33';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.34';
+import { formateraAvrundat } from './utils.js?v=0.34';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -187,9 +187,13 @@ export function läsFormulärVärden(form) {
   let kyrkoavgiftSats = 0;
   const kyrkomedlem = document.querySelector('#kyrkomedlem');
   if (kyrkomedlem?.checked) {
-    const församlingSelect = document.querySelector('#forsamling');
-    if (församlingSelect?.options.length) {
-      kyrkoavgiftSats = Number(församlingSelect.options[församlingSelect.selectedIndex].value) || 0;
+    if (selectedOption.text === 'Riksgenomsnitt') {
+      kyrkoavgiftSats = INKOMSTÅR[STANDARD_INKOMSTÅR].KYRKOAVGIFT_RIKSGENOMSNITT;
+    } else {
+      const församlingSelect = document.querySelector('#forsamling');
+      if (församlingSelect?.options.length) {
+        kyrkoavgiftSats = Number(församlingSelect.options[församlingSelect.selectedIndex].value) || 0;
+      }
     }
   }
 
@@ -236,18 +240,26 @@ export function visaFelmeddelande(container, meddelande) {
 function byggKategorier(uppdelning) {
   const total = uppdelning.totalArbetsgivarkostnad;
   const inkomstskatt = uppdelning.inkomstskatt + uppdelning.pensionsavgift
-    + uppdelning.begravningsavgift + uppdelning.kyrkoavgift + uppdelning.publicServiceAvgift
+    + uppdelning.begravningsavgift + uppdelning.publicServiceAvgift
     - uppdelning.regionalReduktion;
 
-  return {
-    total,
-    kategorier: [
-      { name: 'Arbetsgivaravgifter',   label: ['Arbetsgivar-', 'avgifter'],        value: uppdelning.arbetsgivaravgift, color: '#5C5D6E' },
-      { name: 'Inkomstskatt',          label: ['Inkomst-', 'skatt'],               value: inkomstskatt,                 color: '#F9423A' },
-      { name: 'Moms och punktskatter', label: ['Moms', 'och punkt-', 'skatter'],   value: uppdelning.moms,              color: '#F5A623' },
-      { name: 'Kvar efter skatt',      label: ['Kvar', 'efter', 'skatt'],          value: uppdelning.nettoÅrsinkomst - uppdelning.moms, color: '#2BA784' },
-    ],
-  };
+  const kategorier = [
+    { name: 'Arbetsgivaravgifter',   label: ['Arbetsgivar-', 'avgifter'],        value: uppdelning.arbetsgivaravgift, color: '#5C5D6E' },
+    { name: 'Inkomstskatt',          label: ['Inkomst-', 'skatt'],               value: inkomstskatt,                 color: '#F9423A' },
+  ];
+
+  if (uppdelning.kyrkoavgift > 0) {
+    kategorier.push(
+      { name: 'Kyrkoavgift',          label: ['Kyrko-', 'avgift'],                value: uppdelning.kyrkoavgift,       color: '#7B5EA7' },
+    );
+  }
+
+  kategorier.push(
+    { name: 'Moms och punktskatter', label: ['Moms', 'och punkt-', 'skatter'],   value: uppdelning.moms,              color: '#F5A623' },
+    { name: 'Kvar efter skatt',      label: ['Kvar', 'efter', 'skatt'],          value: uppdelning.nettoÅrsinkomst - uppdelning.moms, color: '#2BA784' },
+  );
+
+  return { total, kategorier };
 }
 
 /**
