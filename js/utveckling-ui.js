@@ -1,4 +1,4 @@
-import { beräknaHistoriskSkatt } from './history-engine.js?v=1.0';
+import { beräknaHistoriskSkatt } from './history-engine.js?v=1.1';
 
 const FIRST_YEAR = 1971;
 const LAST_YEAR = 2025;
@@ -110,7 +110,7 @@ function buildChart(data) {
     stacks.push(stack);
   }
 
-  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full" style="max-height:450px" xmlns="http://www.w3.org/2000/svg">`;
+  let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full" xmlns="http://www.w3.org/2000/svg">`;
 
   // Area layers
   for (let li = 0; li < LAYERS.length; li++) {
@@ -160,7 +160,7 @@ function buildLegend() {
       <span class="text-sm">${l.label}</span>
     </div>`
   ).join('');
-  return `<div class="flex flex-wrap gap-x-4 gap-y-1 mt-3">${items}</div>`;
+  return `<div class="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-3">${items}</div>`;
 }
 
 function buildReformLegend() {
@@ -275,10 +275,36 @@ export function initieraUtveckling() {
 
   let exaktLön = null;
 
+  function byggNollläge() {
+    // Compute a dummy chart at 25k, render full layout grayed out + blurred
+    const data = beräknaAllaÅr(25000);
+    const origColors = LAYERS.map(l => l.color);
+    LAYERS.forEach(l => { l.color = '#d1d5db'; });
+    const svg = buildChart(data);
+    const legend = buildLegend();
+    const reformLegend = buildReformLegend();
+    const summary = buildSummary(data, 25000);
+    LAYERS.forEach((l, i) => { l.color = origColors[i]; });
+
+    return `<div>
+      <div class="relative">
+        <div style="filter:blur(4px);opacity:0.6">${svg}</div>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <h2 class="text-2xl sm:text-4xl font-bold">Du har <span style="color:#F9423A">ingen lön!</span></h2>
+        </div>
+      </div>
+      <div style="filter:blur(4px);opacity:0.6">
+        ${legend}
+        ${reformLegend}
+        ${summary}
+      </div>
+    </div>`;
+  }
+
   function uppdatera() {
     const månadslön = exaktLön !== null ? exaktLön : Number(incomeSlider.value);
     if (månadslön <= 0) {
-      chartContainer.innerHTML = '<p class="text-gray-500">Ange en lön för att se diagrammet.</p>';
+      chartContainer.innerHTML = byggNollläge();
       if (annotationsContainer) annotationsContainer.innerHTML = '';
       return;
     }

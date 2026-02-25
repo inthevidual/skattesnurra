@@ -95,6 +95,7 @@
 
 html {
   font-size: 16px;
+  overflow-x: hidden;
 }
 
 body {
@@ -186,4 +187,14 @@ input[type="range"].brand-slider::-moz-range-track {
   border-color: #e5e7eb;
   background: #f3f4f6;
   border-bottom-color: #f3f4f6;
+}
+
+/* --- Chart breakout --- */
+/* Lets the chart stretch wider than the text column on wide screens */
+
+.chart-breakout {
+  width: 100vw;
+  max-width: 72rem;
+  margin-left: 50%;
+  transform: translateX(-50%);
 }

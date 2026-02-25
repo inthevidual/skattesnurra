@@ -1,6 +1,6 @@
 import {
   lowerbracket, upperbracket, muntax, PBB, vatrate, CPI,
-} from '../data/historik.js?v=1.0';
+} from '../data/historik.js?v=1.1';
 
 function ceil100(v) {
   return Math.ceil(v / 100) * 100;

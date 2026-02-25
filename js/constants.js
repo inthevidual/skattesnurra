@@ -1,15 +1,15 @@
 // Skattekonstanter — tunnt lager som importerar årsvisa datafiler.
 // (c) Jacob Lundberg 2013-2022, uppdatering Erik Bengtzboe 2024-2026
 
-import inkomstår2018 from '../data/2018.js?v=1.0';
-import inkomstår2019 from '../data/2019.js?v=1.0';
-import inkomstår2020 from '../data/2020.js?v=1.0';
-import inkomstår2021 from '../data/2021.js?v=1.0';
-import inkomstår2022 from '../data/2022.js?v=1.0';
-import inkomstår2023 from '../data/2023.js?v=1.0';
-import inkomstår2024 from '../data/2024.js?v=1.0';
-import inkomstår2025 from '../data/2025.js?v=1.0';
-import inkomstår2026 from '../data/2026.js?v=1.0';
+import inkomstår2018 from '../data/2018.js?v=1.1';
+import inkomstår2019 from '../data/2019.js?v=1.1';
+import inkomstår2020 from '../data/2020.js?v=1.1';
+import inkomstår2021 from '../data/2021.js?v=1.1';
+import inkomstår2022 from '../data/2022.js?v=1.1';
+import inkomstår2023 from '../data/2023.js?v=1.1';
+import inkomstår2024 from '../data/2024.js?v=1.1';
+import inkomstår2025 from '../data/2025.js?v=1.1';
+import inkomstår2026 from '../data/2026.js?v=1.1';
 
 /**
  * Alla stödda inkomstår, indexerade efter årtal.

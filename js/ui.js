@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=1.0';
-import { formateraAvrundat } from './utils.js?v=1.0';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=1.1';
+import { formateraAvrundat } from './utils.js?v=1.1';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -405,9 +405,13 @@ function ritaNolllägeHTML() {
   ).join('');
 
   return `<div class="mt-6 mb-4">
-    <h2 class="text-xl font-bold mb-3">Du har <span style="color:#F9423A">ingen lön!</span></h2>
+    <div class="relative">
+      <div style="filter:blur(4px);opacity:0.6"><div class="mb-6">${donut}</div></div>
+      <div class="absolute inset-0 flex items-center justify-center">
+        <h2 class="text-2xl sm:text-4xl font-bold">Du har <span style="color:#F9423A">ingen lön!</span></h2>
+      </div>
+    </div>
     <div style="filter:blur(4px);opacity:0.6">
-      <div class="mb-6">${donut}</div>
       <div class="flex h-7 rounded-lg overflow-hidden">${segments}</div>
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 mt-3">${legendItems}</div>
     </div>

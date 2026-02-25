@@ -1,4 +1,4 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=1.0';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=1.1';
 import {
   fyllKommunväljare,
   fyllFörsamlingsväljare,
@@ -8,10 +8,10 @@ import {
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=1.0';
-import { beräknaHistoriskSkatt } from './history-engine.js?v=1.0';
-import { visaHistorisktResultat, visaDecenniumKommentar } from './history-ui.js?v=1.0';
-import { initieraUtveckling } from './utveckling-ui.js?v=1.0';
+} from './ui.js?v=1.1';
+import { beräknaHistoriskSkatt } from './history-engine.js?v=1.1';
+import { visaHistorisktResultat, visaDecenniumKommentar } from './history-ui.js?v=1.1';
+import { initieraUtveckling } from './utveckling-ui.js?v=1.1';
 
 /**
  * Kör skatteberäkningen och visa resultat.
@@ -103,7 +103,7 @@ function initieraHistorik() {
     yearDisplay.textContent = year;
 
     if (månadslön <= 0) {
-      resultatContainer.innerHTML = '<p class="text-gray-500">Ange en lön för att se beräkningen.</p>';
+      visaNollläge(resultatContainer);
       visaDecenniumKommentar(commentaryContainer, year);
       return;
     }
