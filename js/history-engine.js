@@ -240,7 +240,7 @@ function calcEITC(income, year) {
       EITC = (2.155 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index];
     else if (income >= 13.54 * PBB[index])
       EITC = Math.max(0, (2.155 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index] - 0.03 * (income - 13.54 * PBB[index]));
-  } else if (year >= 2019) {
+  } else if (year >= 2019 && year <= 2021) {
     if (income >= 0 && income < 0.91 * PBB[index])
       EITC = (income - calcbasicdeduction(income, year)) * muntax[index];
     else if (income >= 0.91 * PBB[index] && income < 3.24 * PBB[index])
@@ -251,6 +251,38 @@ function calcEITC(income, year) {
       EITC = (2.323 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index];
     else if (income >= 13.54 * PBB[index])
       EITC = Math.max(0, (2.323 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index] - 0.03 * (income - 13.54 * PBB[index]));
+  } else if (year >= 2022 && year <= 2023) {
+    if (income >= 0 && income < 0.91 * PBB[index])
+      EITC = (income - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 0.91 * PBB[index] && income < 3.24 * PBB[index])
+      EITC = (0.91 * PBB[index] + 0.3874 * (income - 0.91 * PBB[index]) - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 3.24 * PBB[index] && income < 8.08 * PBB[index])
+      EITC = (1.813 * PBB[index] + 0.128 * (income - 3.24 * PBB[index]) - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 8.08 * PBB[index] && income < 13.54 * PBB[index])
+      EITC = (2.432 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 13.54 * PBB[index])
+      EITC = Math.max(0, (2.432 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index] - 0.03 * (income - 13.54 * PBB[index]));
+  } else if (year === 2024) {
+    if (income >= 0 && income < 0.91 * PBB[index])
+      EITC = (income - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 0.91 * PBB[index] && income < 3.24 * PBB[index])
+      EITC = (0.91 * PBB[index] + 0.3874 * (income - 0.91 * PBB[index]) - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 3.24 * PBB[index] && income < 8.08 * PBB[index])
+      EITC = (1.813 * PBB[index] + 0.1643 * (income - 3.24 * PBB[index]) - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 8.08 * PBB[index] && income < 13.54 * PBB[index])
+      EITC = (2.608 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 13.54 * PBB[index])
+      EITC = Math.max(0, (2.608 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index] - 0.03 * (income - 13.54 * PBB[index]));
+  } else if (year >= 2025) {
+    // Avtrappningen borttagen fr.o.m. 2025
+    if (income >= 0 && income < 0.91 * PBB[index])
+      EITC = (income - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 0.91 * PBB[index] && income < 3.24 * PBB[index])
+      EITC = (0.91 * PBB[index] + 0.3874 * (income - 0.91 * PBB[index]) - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 3.24 * PBB[index] && income < 8.08 * PBB[index])
+      EITC = (1.813 * PBB[index] + 0.199 * (income - 3.24 * PBB[index]) - calcbasicdeduction(income, year)) * muntax[index];
+    else if (income >= 8.08 * PBB[index])
+      EITC = (2.776 * PBB[index] - calcbasicdeduction(income, year)) * muntax[index];
   }
 
   return EITC;
@@ -736,7 +768,20 @@ function calcpayrolltax(income, year) {
 }
 
 /**
- * Beräkna historisk skatt för ett givet år (1971–2020).
+ * Tillfälligt jobbskatteavdrag (2021–2022).
+ * Trapetsformad: infasning 60 000–240 000 (1,25%), max 2 250, utfasning 300 000–500 000 (1,125%).
+ */
+function calcTempEITC(income, year) {
+  if (year < 2021 || year > 2022) return 0;
+  if (income <= 60000) return 0;
+  if (income <= 240000) return 0.0125 * (income - 60000);
+  if (income <= 300000) return 2250;
+  if (income <= 500000) return 2250 - 0.01125 * (income - 300000);
+  return 0;
+}
+
+/**
+ * Beräkna historisk skatt för ett givet år (1971–2025).
  * @param {number} realincome — Årsinkomst i dagens penningvärde
  * @param {number} year — Skatteår (1971–2020)
  * @returns {object} Strukturerat resultatobjekt
@@ -764,7 +809,7 @@ export function beräknaHistoriskSkatt(realincome, year) {
   const tincome = Math.max(0, income - workerscontribdeduction - calcextradeduction(income, year) - pensionfee);
 
   const municipalTax = Math.max(0, (tincome - calcbasicdeduction(tincome, year)) * muntax[index]);
-  const eitc = calcEITC(tincome, year);
+  const eitc = calcEITC(tincome, year) + calcTempEITC(income, year);
   const centralTax = Math.max(0, calccentraltax(tincome, year) - calctaxcredit(tincome, year));
   const employeeFees = calcworkerscontrib(income, year) + pensionfee;
   const payrollTax = calcpayrolltax(income, year);

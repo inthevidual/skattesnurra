@@ -35,6 +35,7 @@
     <nav class="tab-bar mb-0" role="tablist" aria-label="Välj vy">
       <button id="tab-nutid" role="tab" aria-selected="true" aria-controls="panel-nutid">Nutid</button>
       <button id="tab-historik" role="tab" aria-selected="false" aria-controls="panel-historik">Historik</button>
+      <button id="tab-utveckling" role="tab" aria-selected="false" aria-controls="panel-utveckling">Över tid</button>
     </nav>
 
     <div id="panel-nutid" role="tabpanel" aria-labelledby="tab-nutid">
@@ -113,12 +114,12 @@
     <div id="panel-historik" role="tabpanel" aria-labelledby="tab-historik" hidden>
     <section class="bg-gray-100 rounded-lg rounded-tl-none p-4 sm:p-6 mb-8">
       <div class="mb-4">
-        <label class="block text-base font-medium mb-1">År: <span id="historik-year-display" class="text-xl font-bold" style="color:#0072CE">2020</span></label>
-        <input type="range" id="historik-year" min="1971" max="2020" step="1" value="2020"
+        <label class="block text-base font-medium mb-1">År: <span id="historik-year-display" class="text-xl font-bold" style="color:#0072CE">2025</span></label>
+        <input type="range" id="historik-year" min="1971" max="2025" step="1" value="2025"
                class="brand-slider w-full">
         <div class="flex justify-between text-xs text-gray-400 mt-1">
           <span>1971</span>
-          <span>2020</span>
+          <span>2025</span>
         </div>
       </div>
 
@@ -150,6 +151,39 @@
       <h3 class="text-lg font-semibold mb-2">Om historiken</h3>
       <p class="text-sm text-gray-700 leading-relaxed">
         Den historiska skatteberäkningen använder riksgenomsnittlig kommunalskattesats och uppskattar moms efter genomsnittlig konsumtion. Alla belopp visas i dagens penningvärde och i det aktuella årets penningvärde (KPI-justerat). Beräkningen är baserad på data från SCB och Skatteverket.
+      </p>
+    </section>
+    </div>
+
+    <div id="panel-utveckling" role="tabpanel" aria-labelledby="tab-utveckling" hidden>
+    <section class="bg-gray-100 rounded-lg rounded-tl-none p-4 sm:p-6 mb-8">
+      <fieldset>
+        <label class="block text-base font-medium mb-1">Månadslön (i dagens penningvärde):</label>
+        <div class="flex items-baseline gap-1 mb-2">
+          <input type="text" id="utveckling-lon-edit" inputmode="numeric"
+                 class="w-32 text-2xl font-bold bg-transparent border-b-2 border-dashed border-gray-400 focus:border-blue-600 outline-none cursor-text transition-colors text-right"
+                 style="color:#0072CE">
+          <span class="text-lg font-medium text-gray-500">kr</span>
+        </div>
+        <input type="range" id="utveckling-lon" min="0" max="100000" step="1000" value="25000"
+               class="brand-slider w-full">
+        <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, klicka och fyll i för exakt lön</p>
+      </fieldset>
+      <p class="text-sm text-gray-500 mt-3">Kommun: Riksgenomsnitt (historiska data använder nationella genomsnitt)</p>
+    </section>
+
+    <section id="utveckling-chart" class="mb-4">
+      <!-- Chart rendered here by JS -->
+    </section>
+
+    <div id="utveckling-annotations" class="mb-8">
+      <!-- Summary text rendered here by JS -->
+    </div>
+
+    <section class="mb-8">
+      <h3 class="text-lg font-semibold mb-2">Om utvecklingen</h3>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        Diagrammet visar hur skattetrycket på arbete har förändrats i Sverige mellan 1971 och 2025. Alla belopp baseras på en fast reallön i dagens penningvärde, så att enbart förändringar i skatteregler syns. Den streckade linjen visar den totala effektiva skattesatsen (alla skatter som andel av arbetsgivarens kostnad). Beräkningen använder riksgenomsnittlig kommunalskattesats.
       </p>
     </section>
     </div>

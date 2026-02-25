@@ -11,6 +11,7 @@ import {
 } from './ui.js?v=1.0';
 import { beräknaHistoriskSkatt } from './history-engine.js?v=1.0';
 import { visaHistorisktResultat, visaDecenniumKommentar } from './history-ui.js?v=1.0';
+import { initieraUtveckling } from './utveckling-ui.js?v=1.0';
 
 /**
  * Kör skatteberäkningen och visa resultat.
@@ -59,28 +60,28 @@ function tolkLön(sträng) {
   return Number(sträng.replace(/\s/g, ''));
 }
 
-/** Tab-växling mellan Nutid och Historik */
+/** Tab-växling — stödjer godtyckligt antal flikar */
 function initieraTabs() {
-  const tabNutid = document.querySelector('#tab-nutid');
-  const tabHistorik = document.querySelector('#tab-historik');
-  const panelNutid = document.querySelector('#panel-nutid');
-  const panelHistorik = document.querySelector('#panel-historik');
+  const tabs = ['nutid', 'historik', 'utveckling'].map(id => ({
+    tab: document.querySelector(`#tab-${id}`),
+    panel: document.querySelector(`#panel-${id}`),
+  }));
 
-  function aktivera(tab) {
-    const isNutid = tab === tabNutid;
-    tabNutid.setAttribute('aria-selected', String(isNutid));
-    tabHistorik.setAttribute('aria-selected', String(!isNutid));
-    if (isNutid) {
-      panelNutid.removeAttribute('hidden');
-      panelHistorik.setAttribute('hidden', '');
-    } else {
-      panelHistorik.removeAttribute('hidden');
-      panelNutid.setAttribute('hidden', '');
+  function aktivera(aktiv) {
+    for (const { tab, panel } of tabs) {
+      const selected = tab === aktiv.tab;
+      tab.setAttribute('aria-selected', String(selected));
+      if (selected) {
+        panel.removeAttribute('hidden');
+      } else {
+        panel.setAttribute('hidden', '');
+      }
     }
   }
 
-  tabNutid.addEventListener('click', () => aktivera(tabNutid));
-  tabHistorik.addEventListener('click', () => aktivera(tabHistorik));
+  for (const entry of tabs) {
+    entry.tab.addEventListener('click', () => aktivera(entry));
+  }
 }
 
 /** Historik-flikens inmatning och beräkning */
@@ -287,9 +288,10 @@ function initiera() {
   edit.value = formateraInmatning(Number(slider.value));
   beräkna(form, resultatBehållare);
 
-  // Initialisera tabbar och historik
+  // Initialisera tabbar, historik och utveckling
   initieraTabs();
   initieraHistorik();
+  initieraUtveckling();
 }
 
 document.addEventListener('DOMContentLoaded', initiera);
