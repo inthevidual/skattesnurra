@@ -108,7 +108,7 @@ body {
 
 /* --- Range slider --- */
 
-input[type="range"]#lon {
+input[type="range"].brand-slider {
   -webkit-appearance: none;
   appearance: none;
   height: 10px;
@@ -118,7 +118,7 @@ input[type="range"]#lon {
   cursor: pointer;
 }
 
-input[type="range"]#lon::-webkit-slider-thumb {
+input[type="range"].brand-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 22px;
   height: 28px;
@@ -129,12 +129,12 @@ input[type="range"]#lon::-webkit-slider-thumb {
   cursor: grab;
 }
 
-input[type="range"]#lon::-webkit-slider-thumb:active {
+input[type="range"].brand-slider::-webkit-slider-thumb:active {
   cursor: grabbing;
   background: #e8e8e8;
 }
 
-input[type="range"]#lon::-moz-range-thumb {
+input[type="range"].brand-slider::-moz-range-thumb {
   width: 22px;
   height: 28px;
   border-radius: 4px;
@@ -144,14 +144,46 @@ input[type="range"]#lon::-moz-range-thumb {
   cursor: grab;
 }
 
-input[type="range"]#lon::-moz-range-thumb:active {
+input[type="range"].brand-slider::-moz-range-thumb:active {
   cursor: grabbing;
   background: #e8e8e8;
 }
 
-input[type="range"]#lon::-moz-range-track {
+input[type="range"].brand-slider::-moz-range-track {
   height: 10px;
   border-radius: 5px;
   background: #0072CE;
   border: none;
+}
+
+/* --- Tabs --- */
+
+.tab-bar {
+  display: flex;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.tab-bar button {
+  padding: 0.5rem 1.25rem;
+  font-weight: 600;
+  font-size: 1rem;
+  color: #6b7280;
+  background: transparent;
+  border: 2px solid transparent;
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.tab-bar button:hover {
+  color: #374151;
+}
+
+.tab-bar button[aria-selected="true"] {
+  color: var(--brand-blue-500);
+  border-color: #e5e7eb;
+  background: #f3f4f6;
+  border-bottom-color: #f3f4f6;
 }

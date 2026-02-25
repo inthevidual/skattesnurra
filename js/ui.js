@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.51';
-import { formateraAvrundat } from './utils.js?v=0.51';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.99';
+import { formateraAvrundat } from './utils.js?v=0.99';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -288,7 +288,7 @@ function byggKategorier(uppdelning) {
  * @param {number} total
  * @returns {string} HTML-sträng
  */
-function ritaMunkdiagram(kategorier, total) {
+export function ritaMunkdiagram(kategorier, total) {
   const w = 600;
   const h = 360;
   const cx = w / 2;
@@ -351,7 +351,8 @@ function ritaMunkdiagram(kategorier, total) {
     const elbowR = outerR + 25;
     const lx2 = cx + elbowR * cosM;
     const ly2 = cy + elbowR * sinM;
-    const lx3 = right ? cx + elbowR + 40 : cx - elbowR - 40;
+    const armExt = c.arm != null ? c.arm : 40;
+    const lx3 = right ? cx + elbowR + armExt : cx - elbowR - armExt;
     const ly3 = ly2;
     const tx = right ? lx3 + 5 : lx3 - 5;
     const anchor = right ? 'start' : 'end';

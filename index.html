@@ -21,7 +21,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="css/custom.css?v=0.51">
+  <link rel="stylesheet" href="css/custom.css?v=0.99">
 </head>
 <body class="bg-white text-gray-900">
   <main class="max-w-3xl mx-auto px-4 py-8">
@@ -32,7 +32,13 @@
       <p>Här kan du ange inkomst och hemkommun, och se din verkliga skatt.</p>
     </section>
 
-    <section class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
+    <nav class="tab-bar mb-0" role="tablist" aria-label="Välj vy">
+      <button id="tab-nutid" role="tab" aria-selected="true" aria-controls="panel-nutid">Nutid</button>
+      <button id="tab-historik" role="tab" aria-selected="false" aria-controls="panel-historik">Historik</button>
+    </nav>
+
+    <div id="panel-nutid" role="tabpanel" aria-labelledby="tab-nutid">
+    <section class="bg-gray-100 rounded-lg rounded-tl-none p-4 sm:p-6 mb-8">
       <form id="myForm">
         <div class="flex items-center gap-2 mb-4">
           <label for="inkomstar" class="text-base font-medium">Inkomstår:</label>
@@ -64,7 +70,7 @@
             <span class="text-lg font-medium text-gray-500">kr</span>
           </div>
           <input type="range" id="lon" name="lon" min="0" max="100000" step="1000" value="25000"
-                 class="w-full">
+                 class="brand-slider w-full">
           <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, klicka och fyll i för exakt lön</p>
         </fieldset>
         </div>
@@ -102,13 +108,58 @@
         Egenföretagare (enskild firma och handelsbolag) betalar egenavgift på 28,97 procent.
       </p>
     </section>
+    </div>
+
+    <div id="panel-historik" role="tabpanel" aria-labelledby="tab-historik" hidden>
+    <section class="bg-gray-100 rounded-lg rounded-tl-none p-4 sm:p-6 mb-8">
+      <div class="mb-4">
+        <label class="block text-base font-medium mb-1">År: <span id="historik-year-display" class="text-xl font-bold" style="color:#0072CE">2020</span></label>
+        <input type="range" id="historik-year" min="1971" max="2020" step="1" value="2020"
+               class="brand-slider w-full">
+        <div class="flex justify-between text-xs text-gray-400 mt-1">
+          <span>1971</span>
+          <span>2020</span>
+        </div>
+      </div>
+
+      <fieldset>
+        <label class="block text-base font-medium mb-1">Månadslön (i dagens penningvärde):</label>
+        <div class="flex items-baseline gap-1 mb-2">
+          <input type="text" id="historik-lon-edit" inputmode="numeric"
+                 class="w-32 text-2xl font-bold bg-transparent border-b-2 border-dashed border-gray-400 focus:border-blue-600 outline-none cursor-text transition-colors text-right"
+                 style="color:#0072CE">
+          <span class="text-lg font-medium text-gray-500">kr</span>
+        </div>
+        <input type="range" id="historik-lon" min="0" max="100000" step="1000" value="25000"
+               class="brand-slider w-full">
+        <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, klicka och fyll i för exakt lön</p>
+      </fieldset>
+
+      <p class="text-sm text-gray-500 mt-3">Kommun: Riksgenomsnitt (historiska data använder nationella genomsnitt)</p>
+    </section>
+
+    <section id="historik-resultat" aria-live="polite" class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
+      <!-- Historical results rendered here by JS -->
+    </section>
+
+    <div id="historik-commentary" class="mb-8">
+      <!-- Decade commentary rendered here by JS -->
+    </div>
+
+    <section class="mb-8">
+      <h3 class="text-lg font-semibold mb-2">Om historiken</h3>
+      <p class="text-sm text-gray-700 leading-relaxed">
+        Den historiska skatteberäkningen använder riksgenomsnittlig kommunalskattesats och uppskattar moms efter genomsnittlig konsumtion. Alla belopp visas i dagens penningvärde och i det aktuella årets penningvärde (KPI-justerat). Beräkningen är baserad på data från SCB och Skatteverket.
+      </p>
+    </section>
+    </div>
 
   </main>
 
   <footer class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-1.5 text-center text-gray-500" style="font-family:'IBM Plex Mono',monospace;font-size:10px">
-    v0.51 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
+    v0.99 &middot; doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
   </footer>
 
-  <script type="module" src="js/main.js?v=0.51"></script>
+  <script type="module" src="js/main.js?v=0.99"></script>
 </body>
 </html>

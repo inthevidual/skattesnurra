@@ -1,4 +1,4 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.51';
+import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.99';
 import {
   fyllKommunväljare,
   fyllFörsamlingsväljare,
@@ -8,7 +8,9 @@ import {
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=0.51';
+} from './ui.js?v=0.99';
+import { beräknaHistoriskSkatt } from './history-engine.js?v=0.99';
+import { visaHistorisktResultat, visaDecenniumKommentar } from './history-ui.js?v=0.99';
 
 /**
  * Kör skatteberäkningen och visa resultat.
@@ -55,6 +57,112 @@ function formateraInmatning(n) {
  */
 function tolkLön(sträng) {
   return Number(sträng.replace(/\s/g, ''));
+}
+
+/** Tab-växling mellan Nutid och Historik */
+function initieraTabs() {
+  const tabNutid = document.querySelector('#tab-nutid');
+  const tabHistorik = document.querySelector('#tab-historik');
+  const panelNutid = document.querySelector('#panel-nutid');
+  const panelHistorik = document.querySelector('#panel-historik');
+
+  function aktivera(tab) {
+    const isNutid = tab === tabNutid;
+    tabNutid.setAttribute('aria-selected', String(isNutid));
+    tabHistorik.setAttribute('aria-selected', String(!isNutid));
+    if (isNutid) {
+      panelNutid.removeAttribute('hidden');
+      panelHistorik.setAttribute('hidden', '');
+    } else {
+      panelHistorik.removeAttribute('hidden');
+      panelNutid.setAttribute('hidden', '');
+    }
+  }
+
+  tabNutid.addEventListener('click', () => aktivera(tabNutid));
+  tabHistorik.addEventListener('click', () => aktivera(tabHistorik));
+}
+
+/** Historik-flikens inmatning och beräkning */
+function initieraHistorik() {
+  const yearSlider = document.querySelector('#historik-year');
+  const yearDisplay = document.querySelector('#historik-year-display');
+  const incomeSlider = document.querySelector('#historik-lon');
+  const incomeEdit = document.querySelector('#historik-lon-edit');
+  const resultatContainer = document.querySelector('#historik-resultat');
+  const commentaryContainer = document.querySelector('#historik-commentary');
+
+  let exaktHistorikLön = null;
+
+  function beräknaHistorik() {
+    const year = Number(yearSlider.value);
+    const månadslön = exaktHistorikLön !== null ? exaktHistorikLön : Number(incomeSlider.value);
+    const årsinkomst = månadslön * 12;
+
+    yearDisplay.textContent = year;
+
+    if (månadslön <= 0) {
+      resultatContainer.innerHTML = '<p class="text-gray-500">Ange en lön för att se beräkningen.</p>';
+      visaDecenniumKommentar(commentaryContainer, year);
+      return;
+    }
+
+    const resultat = beräknaHistoriskSkatt(årsinkomst, year);
+    visaHistorisktResultat(resultatContainer, resultat);
+    visaDecenniumKommentar(commentaryContainer, year);
+  }
+
+  function synkaFrånReglage() {
+    exaktHistorikLön = null;
+    incomeEdit.value = formateraInmatning(Number(incomeSlider.value));
+    beräknaHistorik();
+  }
+
+  function synkaFrånInmatning() {
+    let val = tolkLön(incomeEdit.value);
+    if (isNaN(val) || val < 0) val = 0;
+    if (val > 100000) val = 100000;
+    exaktHistorikLön = val;
+    incomeSlider.value = Math.round(val / 1000) * 1000;
+    incomeEdit.value = formateraInmatning(val);
+    beräknaHistorik();
+  }
+
+  yearSlider.addEventListener('input', () => {
+    yearDisplay.textContent = yearSlider.value;
+    beräknaHistorik();
+  });
+
+  incomeSlider.addEventListener('input', synkaFrånReglage);
+  incomeEdit.addEventListener('change', synkaFrånInmatning);
+  incomeEdit.addEventListener('blur', synkaFrånInmatning);
+
+  let inmatningsTimer = null;
+  incomeEdit.addEventListener('input', () => {
+    clearTimeout(inmatningsTimer);
+    inmatningsTimer = setTimeout(() => {
+      let val = tolkLön(incomeEdit.value);
+      if (!isNaN(val) && val >= 0) {
+        if (val > 100000) val = 100000;
+        exaktHistorikLön = val;
+        incomeSlider.value = Math.round(val / 1000) * 1000;
+        beräknaHistorik();
+      }
+    }, 400);
+  });
+
+  incomeEdit.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      clearTimeout(inmatningsTimer);
+      synkaFrånInmatning();
+      incomeEdit.blur();
+    }
+  });
+
+  // Initial synkronisering
+  incomeEdit.value = formateraInmatning(Number(incomeSlider.value));
+  beräknaHistorik();
 }
 
 function initiera() {
@@ -178,6 +286,10 @@ function initiera() {
   // Initial synkronisering + beräkning
   edit.value = formateraInmatning(Number(slider.value));
   beräkna(form, resultatBehållare);
+
+  // Initialisera tabbar och historik
+  initieraTabs();
+  initieraHistorik();
 }
 
 document.addEventListener('DOMContentLoaded', initiera);
