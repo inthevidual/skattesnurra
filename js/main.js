@@ -1,4 +1,4 @@
-import { beräknaSkatteuppdelning } from './tax-engine.js?v=0.99';
+import { beräknaSkatteuppdelning } from './tax-engine.js';
 import {
   fyllKommunväljare,
   fyllFörsamlingsväljare,
@@ -8,9 +8,9 @@ import {
   visaResultat,
   visaFelmeddelande,
   visaNollläge,
-} from './ui.js?v=0.99';
-import { beräknaHistoriskSkatt } from './history-engine.js?v=0.99';
-import { visaHistorisktResultat, visaDecenniumKommentar } from './history-ui.js?v=0.99';
+} from './ui.js';
+import { beräknaHistoriskSkatt } from './history-engine.js';
+import { visaHistorisktResultat, visaDecenniumKommentar } from './history-ui.js';
 
 /**
  * Kör skatteberäkningen och visa resultat.

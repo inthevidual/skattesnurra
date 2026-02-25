@@ -1,6 +1,6 @@
-import { ritaMunkdiagram } from './ui.js?v=0.99';
-import { formateraAvrundat } from './utils.js?v=0.99';
-import { DECADE_COMMENTARY } from '../data/historik.js?v=0.99';
+import { ritaMunkdiagram } from './ui.js';
+import { formateraAvrundat } from './utils.js';
+import { DECADE_COMMENTARY } from '../data/historik.js';
 
 /**
  * Bygg donut-kategorier från historiskt resultat.
@@ -9,20 +9,20 @@ import { DECADE_COMMENTARY } from '../data/historik.js?v=0.99';
 function byggHistoriskaKategorier(r) {
   const kategorier = [];
 
-  // Statlig skatt först — startar vid 12 o'clock, undviker kollision med Moms
+  // Statlig skatt vid 12 o'clock; moms mellan arbetsgivaravgifter och kommunalskatt
   if (r.centralTax > 0)
     kategorier.push({ name: 'Statlig skatt', label: ['Statlig', 'skatt'], value: r.centralTax, color: '#C2625E' });
-  if (r.vat > 0)
-    kategorier.push({ name: 'Moms', label: ['Moms'], value: r.vat, color: '#F5A623' });
 
   kategorier.push({ name: 'Kvar efter skatt', label: ['Kvar', 'efter', 'skatt'], value: r.netAfterAllTax, color: '#2BA784' });
 
   if (r.payrollTax > 0)
-    kategorier.push({ name: 'Arbetsgivaravgifter', label: ['Arbetsgivar-', 'avgifter'], value: r.payrollTax, color: '#5C5D6E' });
-  if (r.employeeFees > 0)
-    kategorier.push({ name: 'Allm. egenavgifter', label: ['Allmänna', 'egenavgifter'], arm: 20, value: r.employeeFees, color: '#7B5EA7' });
+    kategorier.push({ name: 'Arbetsgivaravgifter', label: ['Arbetsgivar-', 'avgifter'], arm: 20, value: r.payrollTax, color: '#5C5D6E' });
+  if (r.vat > 0)
+    kategorier.push({ name: 'Moms', label: ['Moms'], value: r.vat, color: '#F5A623' });
   if (r.municipalTax - r.eitc > 0)
     kategorier.push({ name: 'Kommunalskatt', label: ['Kommunal-', 'skatt'], value: r.municipalTax - r.eitc, color: '#F9423A' });
+  if (r.employeeFees > 0)
+    kategorier.push({ name: 'Allm. egenavgifter', label: ['Allmänna', 'egenavgifter'], arm: 20, value: r.employeeFees, color: '#7B5EA7' });
 
   return kategorier;
 }
