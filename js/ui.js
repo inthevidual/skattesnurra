@@ -267,7 +267,7 @@ function byggKategorier(uppdelning) {
     - uppdelning.regionalReduktion;
 
   const kategorier = [
-    { name: 'Arbetsgivaravgifter',   label: ['Arbetsgivar-', 'avgifter'],        value: uppdelning.arbetsgivaravgift, color: '#5C5D6E' },
+    { name: 'Arbetsgivaravgifter',   label: ['Arbetsgivar-', 'avgifter'], arm: 20, value: uppdelning.arbetsgivaravgift, color: '#5C5D6E' },
     { name: 'Inkomstskatt',          label: ['Inkomst-', 'skatt'],               value: inkomstskatt,                 color: '#F9423A' },
     { name: 'Moms och punktskatter', label: ['Moms', 'och punkt-', 'skatter'],   value: uppdelning.moms,              color: '#F5A623' },
     { name: 'Kvar efter skatt',      label: ['Kvar', 'efter', 'skatt'],          value: uppdelning.nettoÅrsinkomst - uppdelning.moms, color: '#2BA784' },
@@ -495,8 +495,10 @@ export function visaResultat(container, uppdelning) {
     output += tabellrad('Allmän pensionsavgift', -uppdelning.pensionsavgift / 12, false, rowIndex++);
   }
 
-  // Regional reduktion (visas alltid)
-  output += tabellrad('Skattereduktion för boende i vissa områden', uppdelning.regionalReduktion / 12, false, rowIndex++);
+  // Regional reduktion (visas bara om > 0)
+  if (uppdelning.regionalReduktion > 0) {
+    output += tabellrad('Skattereduktion för boende i vissa områden', uppdelning.regionalReduktion / 12, false, rowIndex++);
+  }
 
   if (uppdelning.begravningsavgift > 0) {
     output += tabellrad('Begravningsavgift', -uppdelning.begravningsavgift / 12, false, rowIndex++);
