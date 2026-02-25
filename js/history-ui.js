@@ -1,6 +1,6 @@
-import { ritaMunkdiagram } from './ui.js?v=0.9999';
-import { formateraAvrundat } from './utils.js?v=0.9999';
-import { DECADE_COMMENTARY } from '../data/historik.js?v=0.9999';
+import { ritaMunkdiagram } from './ui.js?v=1.0';
+import { formateraAvrundat } from './utils.js?v=1.0';
+import { DECADE_COMMENTARY } from '../data/historik.js?v=1.0';
 
 /**
  * Bygg donut-kategorier från historiskt resultat.

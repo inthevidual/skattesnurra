@@ -1,5 +1,5 @@
-import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=0.9999';
-import { formateraAvrundat } from './utils.js?v=0.9999';
+import { INKOMSTÅR, STANDARD_INKOMSTÅR } from './constants.js?v=1.0';
+import { formateraAvrundat } from './utils.js?v=1.0';
 
 /**
  * Generisk sökbar rullgardinsmeny-fabrik.
@@ -289,12 +289,12 @@ function byggKategorier(uppdelning) {
  * @returns {string} HTML-sträng
  */
 export function ritaMunkdiagram(kategorier, total) {
-  const w = 600;
-  const h = 360;
+  const w = 640;
+  const h = 400;
   const cx = w / 2;
   const cy = h / 2;
-  const outerR = 120;
-  const innerR = 52;
+  const outerR = 140;
+  const innerR = 60;
   const labelR = (outerR + innerR) / 2;
 
   let angle = -90;
@@ -348,10 +348,10 @@ export function ritaMunkdiagram(kategorier, total) {
 
     const lx1 = cx + (outerR + 4) * cosM;
     const ly1 = cy + (outerR + 4) * sinM;
-    const elbowR = outerR + 25;
+    const elbowR = outerR + 20;
     const lx2 = cx + elbowR * cosM;
     const ly2 = cy + elbowR * sinM;
-    const armExt = c.arm != null ? c.arm : 40;
+    const armExt = c.arm != null ? c.arm : 30;
     const lx3 = right ? cx + elbowR + armExt : cx - elbowR - armExt;
     const ly3 = ly2;
     const tx = right ? lx3 + 5 : lx3 - 5;
@@ -450,9 +450,8 @@ function ritaGraf(uppdelning) {
     </div>`;
   }).join('');
 
-  return `<div class="mt-6 mb-4">
-    <h2 class="text-xl font-bold mb-3">Din skatt:</h2>
-    <div class="mb-6">${donut}</div>
+  return `<div class="mt-4 mb-4">
+    <div class="mb-4">${donut}</div>
     <div class="flex h-7 rounded-lg overflow-hidden">${segments}</div>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 mt-3">${legendItems}</div>
   </div>`;
