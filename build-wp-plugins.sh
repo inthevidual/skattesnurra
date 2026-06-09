@@ -194,12 +194,13 @@ build_plugin "fastighetsskatt" "fastighetsskatt" "fastighetsskatt" "fastighetssk
 build_plugin "drivmedelsskatt" "drivmedelsskatt" "drivmedelsskatt" "drivmedelsskatt" "Drivmedelsskatt"
 build_plugin "skattebetalardagen" "skattebetalardagen" "skattebetalardagen" "skattebetalardagen" "Skattebetalardagen"
 build_plugin "lonekostnad" "lonekostnad" "lonekostnad" "lonekostnad" "Vad kostar en anställd?"
+build_plugin "utdelning312" "utdelning312" "utdelning312" "utdelning312" "Räkna ut 3:12-utdelning"
 
 echo ""
 echo "── All plugins built ─────────────────────────────────"
 echo ""
 echo "  Install: WordPress Admin → Plugins → Add New → Upload Plugin"
-echo "  Shortcodes: [fastighetsskatt]  [drivmedelsskatt]  [skattebetalardagen]  [lonekostnad]"
+echo "  Shortcodes: [fastighetsskatt]  [drivmedelsskatt]  [skattebetalardagen]  [lonekostnad]  [utdelning312]"
 echo ""
 echo "  Output: $DIST/"
 ls -1 "$DIST"/*.zip 2>/dev/null | sed 's/^/    /'
