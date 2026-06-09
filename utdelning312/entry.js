@@ -45,7 +45,7 @@ function clamp(n, lo, hi) {
 
 /* ── Calculation (faithful to the Wint 3:12 calculator) ─────────────── */
 
-function beräkna(inår, ägarandelPct, totalaLöner, omkostnad, andraBolagPct) {
+function beräkna(inår, ägarandelPct, totalaLöner, omkostnad, andraBolagPct, sparatUtrymme) {
   const cfg = ÅR_CONFIG[inår] || ÅR_CONFIG[STANDARD_ÅR];
   const andel = clamp(ägarandelPct, 0, 100) / 100;
   const andraAndel = clamp(andraBolagPct, 0, 100) / 100;
@@ -70,9 +70,16 @@ function beräkna(inår, ägarandelPct, totalaLöner, omkostnad, andraBolagPct) 
     ränta = (omkostnad - OMKOSTNAD_FRIBELOPP) * (RÄNTESATS_PÅSLAG + cfg.slr);
   }
 
-  const utdelningsutrymme = grundbelopp + reducering + lönebaserat + ränta;
+  // Sparat utdelningsutrymme från tidigare år förs vidare till nominellt värde
+  // (uppräkningsräntan är slopad i de nya 3:12-reglerna).
+  const sparat = Math.max(0, sparatUtrymme || 0);
+
+  const utdelningsutrymme = grundbelopp + reducering + lönebaserat + ränta + sparat;
   const efterSkatt = utdelningsutrymme * (1 - SKATT);
-  const löneuttagskrav = lönebaserat / 50;
+
+  // Takregel: det lönebaserade utrymmet får vara högst 50 × egen/närståendes
+  // lön. Detta är minsta lön som krävs för att utnyttja hela utrymmet.
+  const lönTakregel = lönebaserat / 50;
 
   return {
     ibb: cfg.ibb,
@@ -82,9 +89,10 @@ function beräkna(inår, ägarandelPct, totalaLöner, omkostnad, andraBolagPct) 
     grundbeloppNetto: grundbelopp + reducering,
     lönebaserat,
     ränta,
+    sparat,
     utdelningsutrymme,
     efterSkatt,
-    löneuttagskrav,
+    lönTakregel,
   };
 }
 
@@ -93,6 +101,7 @@ function beräkna(inår, ägarandelPct, totalaLöner, omkostnad, andraBolagPct) 
 const FÄRG_GRUND = '#0072CE';  // blue
 const FÄRG_LÖN = '#2BA784';    // green
 const FÄRG_RÄNTA = '#F5A623';  // amber
+const FÄRG_SPARAT = '#7B5EA7'; // violet
 
 function template() {
   const årsval = Object.keys(ÅR_CONFIG)
@@ -151,6 +160,16 @@ function template() {
         </div>
         <p class="text-xs text-gray-400 mt-1">Påverkar bara grundbeloppet om din sammanlagda ägarandel överstiger 100 %.</p>
       </fieldset>
+
+      <fieldset>
+        <label for="u312-sparat" class="block text-base font-medium mb-1">Sparat utdelningsutrymme från tidigare år</label>
+        <div class="flex items-baseline gap-2">
+          <input type="text" id="u312-sparat" inputmode="numeric" placeholder="0"
+                 class="w-40 rounded border border-gray-300 px-3 py-2 text-lg text-right">
+          <span class="text-base text-gray-500">kr</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-1">Outnyttjat gränsbelopp från tidigare år. Räknas nu med till nominellt värde.</p>
+      </fieldset>
     </div>
   </section>
 
@@ -160,9 +179,10 @@ function template() {
     <h3 class="text-lg font-semibold mb-3">Om beräkningen</h3>
     <div class="text-sm text-gray-700 leading-relaxed space-y-3">
       <p><strong>Grundbelopp.</strong> Du får tillgodoräkna dig din andel av 4 inkomstbasbelopp (IBB) från föregående år. Varje delägare får högst ett grundbelopp totalt – äger du flera fåmansbolag fördelas beloppet, vilket visas som en reducering.</p>
-      <p><strong>Lönebaserat utrymme.</strong> Hälften av din andel av bolagets kontanta löner, efter ett avdrag på 8 inkomstbasbelopp. För att utnyttja hela det lönebaserade utrymmet finns ett krav på egen lön.</p>
+      <p><strong>Lönebaserat utrymme.</strong> Hälften av din andel av bolagets kontanta löner, efter ett avdrag på 8 inkomstbasbelopp. I de nya reglerna är det tidigare löneuttagskravet slopat, men en takregel finns kvar: det lönebaserade utrymmet får vara högst 50 gånger din egen eller en närståendes lön.</p>
       <p><strong>Ränta på omkostnadsbelopp.</strong> Statslåneräntan + 9 % på den del av aktiernas anskaffningskostnad som överstiger 100 000 kr. Är föregående års statslåneränta ännu inte fastställd räknas endast med 9 %.</p>
-      <p><strong>Utdelning inom gränsbeloppet</strong> beskattas med 20 %. Sparat utdelningsutrymme från tidigare år får läggas till gränsbeloppet och är inte med i beräkningen ovan. Kalkylen är förenklad och ersätter inte rådgivning.</p>
+      <p><strong>Sparat utdelningsutrymme.</strong> Outnyttjat gränsbelopp från tidigare år läggs till. Den årliga uppräkningsräntan är slopad i de nya reglerna, så sparat utrymme förs vidare till nominellt värde.</p>
+      <p><strong>Utdelning inom gränsbeloppet</strong> beskattas med 20 %. Kalkylen är förenklad och ersätter inte rådgivning.</p>
     </div>
   </section>
 
@@ -176,6 +196,7 @@ function visaResultat(container, inår, r) {
   const gPct = seg(r.grundbeloppNetto);
   const lPct = seg(r.lönebaserat);
   const rPct = seg(r.ränta);
+  const sPct = seg(r.sparat);
 
   let html = '';
 
@@ -196,11 +217,13 @@ function visaResultat(container, inår, r) {
         ${seg_html(gPct, FÄRG_GRUND, Math.round(gPct) + ' %')}
         ${seg_html(lPct, FÄRG_LÖN, Math.round(lPct) + ' %')}
         ${seg_html(rPct, FÄRG_RÄNTA, Math.round(rPct) + ' %')}
+        ${r.sparat > 0 ? seg_html(sPct, FÄRG_SPARAT, Math.round(sPct) + ' %') : ''}
       </div>
       <div class="flex flex-wrap gap-x-5 gap-y-1 mt-3 mb-6 text-sm">
         <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-sm" style="background:${FÄRG_GRUND}"></span>Grundbelopp</span>
         <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-sm" style="background:${FÄRG_LÖN}"></span>Lönebaserat utrymme</span>
         <span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-sm" style="background:${FÄRG_RÄNTA}"></span>Ränta på omkostnadsbelopp</span>
+        ${r.sparat > 0 ? `<span class="flex items-center gap-2"><span class="inline-block w-3 h-3 rounded-sm" style="background:${FÄRG_SPARAT}"></span>Sparat utrymme</span>` : ''}
       </div>
     </div>`;
   }
@@ -218,6 +241,9 @@ function visaResultat(container, inår, r) {
   }
   rows.push({ label: 'Lönebaserat utrymme', value: r.lönebaserat });
   rows.push({ label: 'Ränta på omkostnadsbelopp', value: r.ränta });
+  if (r.sparat > 0) {
+    rows.push({ label: 'Sparat utdelningsutrymme', value: r.sparat });
+  }
 
   rows.forEach((row, i) => {
     const bg = i % 2 === 0 ? '' : 'bg-gray-100';
@@ -235,7 +261,7 @@ function visaResultat(container, inår, r) {
   html += `</tbody></table>`;
 
   if (r.lönebaserat > 0) {
-    html += `<p class="text-sm text-gray-600 mt-4">För att utnyttja hela det lönebaserade utrymmet behöver din egen lön i bolaget ${inår - 1} uppgå till minst <strong>${formatKr(r.löneuttagskrav)}</strong>.</p>`;
+    html += `<p class="text-sm text-gray-600 mt-4">Takregel: det lönebaserade utrymmet får vara högst 50 gånger din egen (eller en närståendes) lön. För att utnyttja hela det lönebaserade utrymmet behöver lönen i bolaget ${inår - 1} därför uppgå till minst <strong>${formatKr(r.lönTakregel)}</strong>.</p>`;
   }
   html += `</div>`;
 
@@ -264,6 +290,7 @@ function init() {
     löner: document.getElementById('u312-loner'),
     omkostnad: document.getElementById('u312-omkostnad'),
     andra: document.getElementById('u312-andra'),
+    sparat: document.getElementById('u312-sparat'),
     lönerÅr: document.getElementById('u312-loner-ar'),
     resultat: document.getElementById('u312-resultat'),
   };
@@ -277,6 +304,7 @@ function init() {
       tolkTal(els.löner.value),
       tolkTal(els.omkostnad.value),
       tolkTal(els.andra.value),
+      tolkTal(els.sparat.value),
     );
     visaResultat(els.resultat, inår, r);
   }
@@ -288,10 +316,10 @@ function init() {
   }
 
   els.år.addEventListener('change', uppdatera);
-  [els.andel, els.löner, els.omkostnad, els.andra].forEach((el) => {
+  [els.andel, els.löner, els.omkostnad, els.andra, els.sparat].forEach((el) => {
     el.addEventListener('input', uppdatera);
   });
-  [els.löner, els.omkostnad].forEach((el) => {
+  [els.löner, els.omkostnad, els.sparat].forEach((el) => {
     el.addEventListener('blur', () => { formateraFält(el); });
     el.addEventListener('focus', () => { el.value = String(tolkTal(el.value) || ''); });
   });
