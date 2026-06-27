@@ -24,8 +24,10 @@ export default {
   // Pensionsavgift
   PENSIONSAVGIFT: 0.07,
 
-  // Moms
-  VIKTAD_MOMS: 0.184,
+  // Konsumtionsskatter (moms + punktskatter, viktad)
+  // 2026: sänkt matmoms (halverad apr–dec), lägre skatt på drivmedel och el
+  // pressar ned den viktade konsumtionsskatten till 19,4 % (Skattebetalardagen 2026).
+  VIKTAD_MOMS: 0.194,
 
   // Public service
   PUBLIC_SERVICE_AVGIFT: 0.01,
