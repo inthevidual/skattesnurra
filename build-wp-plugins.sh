@@ -113,6 +113,15 @@ CSS
   color: inherit;
 }
 
+/* Neutralise theme list-bullet pseudo-elements (e.g. the fenix theme's
+   \`.prose :where(ul>li):before\` red square) from leaking into embedded
+   lists such as the kommun picker dropdown. \`list-style:none\` on the <li>
+   only removes the native ::marker, not a CSS-generated ::before. */
+#${CONTAINER_ID} ul li::before,
+#${CONTAINER_ID} ol li::before {
+  content: none !important;
+}
+
 CSSHEADER
 
   # Append Tailwind theme + utilities

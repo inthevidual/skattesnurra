@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Skattebetalardagen
  * Description: Bädda in räknesnurran med shortcode [skattebetalardagen] eller [skattebetalardagen ar="2024"]
- * Version: 1.7
+ * Version: 1.8
  * Author: Skattebetalarna
  */
 
@@ -14,13 +14,13 @@ add_shortcode('skattebetalardagen', function ($atts) {
         'skattebetalardagen',
         plugin_dir_url(__FILE__) . 'skattebetalardagen.css',
         [],
-        '1.7'
+        '1.8'
     );
     wp_enqueue_script(
         'skattebetalardagen',
         plugin_dir_url(__FILE__) . 'skattebetalardagen.js',
         [],
-        '1.7',
+        '1.8',
         true
     );
 
