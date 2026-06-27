@@ -302,7 +302,7 @@ function visaResultat(container, uppdelning, år) {
       <p style="font-size:1rem;color:#555;margin:0 0 4px;font-weight:500">Din Skattebetalardag ${ år }</p>
       <p style="font-size:clamp(2rem,5vw,3.5rem);font-weight:800;color:#0072CE;margin:0 0 4px;line-height:1.15">${ datumStr }</p>
       <p style="font-size:.95rem;color:#555;margin:0 0 20px">
-        Från och med denna dag arbetar du för staten. Totalt skattetryck: <strong>${ skattPct }%</strong>
+        Från och med denna dag arbetar du för stat och kommun. Totalt skattetryck: <strong>${ skattPct }%</strong>
       </p>
 
       <div style="position:relative;margin:0 auto;max-width:640px">
