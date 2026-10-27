@@ -1,0 +1,78 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "cpcharts/stacked-bar",
+  "version": "1.0.0",
+  "title": "Stacked Bar Chart",
+  "category": "widgets",
+  "icon": "chart-bar",
+  "description": "A horizontal stacked bar chart with custom segments, labels, colors, and bracket annotations.",
+  "keywords": [
+    "chart",
+    "bar",
+    "stacked",
+    "graph"
+  ],
+  "supports": {
+    "html": false,
+    "align": [
+      "wide",
+      "full"
+    ]
+  },
+  "attributes": {
+    "title": {
+      "type": "string",
+      "default": ""
+    },
+    "unit": {
+      "type": "string",
+      "default": "kr"
+    },
+    "maxValue": {
+      "type": "number",
+      "default": 100
+    },
+    "scaleStep": {
+      "type": "number",
+      "default": 20
+    },
+    "barHeight": {
+      "type": "number",
+      "default": 64
+    },
+    "barRadius": {
+      "type": "number",
+      "default": 6
+    },
+    "segments": {
+      "type": "array",
+      "default": [
+        {
+          "label": "Segment A",
+          "value": 40,
+          "color": "#B5AD6F"
+        },
+        {
+          "label": "Segment B",
+          "value": 35,
+          "color": "#006B5A"
+        },
+        {
+          "label": "Segment C",
+          "value": 25,
+          "color": "#F58220"
+        }
+      ]
+    },
+    "brackets": {
+      "type": "array",
+      "default": []
+    }
+  },
+  "textdomain": "cpcharts",
+  "editorScript": "file:./index.js",
+  "editorStyle": "file:./index.css",
+  "style": "file:./style-index.css",
+  "render": "file:./render.php"
+}

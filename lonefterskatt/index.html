@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lön efter skatt — Räkna ut din nettolön</title>
+  <meta name="description" content="Räkna ut din lön efter skatt med vår skatteberäknare. Ange månadslön och kommun för att se kommunalskatt, statlig skatt, jobbskatteavdrag, kyrkoavgift, marginalskatt och nettolön. Gäller inkomståren 2018–2026.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://lonefterskatt.cptjanst.se/">
+  <meta property="og:title" content="Lön efter skatt — Räkna ut din nettolön">
+  <meta property="og:description" content="Hur mycket får du kvar efter skatt? Ange din månadslön och hemkommun och se exakt hur din skatt fördelas — kommunalskatt, statlig skatt, jobbskatteavdrag, kyrkoavgift, begravningsavgift och marginalskatt. Beräkningar för inkomståren 2018–2026 med data från Skatteverket.">
+  <meta property="og:image" content="https://lonefterskatt.cptjanst.se/og.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="600">
+  <meta property="og:locale" content="sv_SE">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Lön efter skatt — Räkna ut din nettolön">
+  <meta name="twitter:description" content="Hur mycket får du kvar efter skatt? Ange din månadslön och hemkommun och se exakt hur din skatt fördelas — kommunalskatt, statlig skatt, jobbskatteavdrag, kyrkoavgift, begravningsavgift och marginalskatt.">
+  <meta name="twitter:image" content="https://lonefterskatt.cptjanst.se/og.png">
+  <style>
+    @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 300 700;
+      font-display: swap;
+      src: url(fonts/inter-swedish.woff2) format('woff2');
+    }
+    @font-face {
+      font-family: 'IBM Plex Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url(fonts/ibm-plex-mono-swedish.woff2) format('woff2');
+    }
+  </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="../css/custom.css?v=0.666">
+</head>
+<body class="bg-white text-gray-900">
+  <main class="max-w-2xl mx-auto px-4 py-8">
+
+    <h1 class="text-3xl sm:text-4xl font-bold mb-6">Lön efter skatt</h1>
+
+    <section class="bg-gray-100 rounded-lg p-4 sm:p-6 mb-8">
+      <form id="myForm">
+        <div class="flex items-center gap-2 mb-4">
+          <label for="inkomstar" class="text-lg font-medium">Inkomstår:</label>
+          <select id="inkomstar"
+                  class="rounded border border-gray-300 px-3 py-2 text-lg bg-white">
+          </select>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 items-end">
+        <fieldset class="flex-1 w-full">
+          <label for="komm-search" class="block text-lg font-medium mb-1">Kommun:</label>
+          <div class="relative" id="komm-wrapper">
+            <input type="text" id="komm-search" autocomplete="off" placeholder="Sök kommun..."
+                   class="w-full rounded border border-gray-300 px-3 py-2 text-lg">
+            <ul id="komm-list" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto shadow-lg"></ul>
+            <select id="komm" name="kommun" class="hidden"></select>
+          </div>
+        </fieldset>
+
+        <fieldset class="flex-1 w-full">
+          <label class="block text-lg font-medium mb-1">Månadslön:</label>
+          <div class="flex items-baseline gap-1 mb-2">
+            <input type="text" id="lon-edit" inputmode="numeric"
+                   class="w-36 text-3xl font-bold bg-transparent border-b-2 border-dashed border-gray-400 focus:border-blue-600 outline-none cursor-text transition-colors text-right"
+                   style="color:#0072CE">
+            <span class="text-xl font-medium text-gray-500">kr</span>
+          </div>
+          <input type="range" id="lon" name="lon" min="0" max="100000" step="1000" value="0"
+                 class="brand-slider w-full">
+          <p class="text-xs text-gray-400 mt-1">Dra för jämna tusental, skriv in för exakt lön</p>
+        </fieldset>
+        </div>
+
+        <div class="mt-4 flex flex-col sm:flex-row gap-4 items-start">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" id="kyrkomedlem" class="w-4 h-4" style="accent-color:var(--brand-violet-500)">
+            <span class="text-lg font-medium">Medlem i Svenska kyrkan?</span>
+          </label>
+
+          <fieldset id="forsamling-fieldset" class="flex-1 w-full hidden">
+            <label for="forsamling-search" class="block text-lg font-medium mb-1">Församling:</label>
+            <div class="relative" id="forsamling-wrapper">
+              <input type="text" id="forsamling-search" autocomplete="off" placeholder="Sök församling..."
+                     class="w-full rounded border border-gray-300 px-3 py-2 text-lg">
+              <ul id="forsamling-list" class="hidden absolute z-10 w-full bg-white border border-gray-300 rounded mt-1 max-h-60 overflow-y-auto shadow-lg"></ul>
+              <select id="forsamling" class="hidden"></select>
+            </div>
+          </fieldset>
+        </div>
+      </form>
+    </section>
+
+    <section id="resultat" aria-live="polite" class="mb-8">
+    </section>
+
+    <section class="bg-gray-50 border border-gray-200 rounded-lg p-4 sm:p-6 mb-8">
+      <h3 class="text-xl font-semibold mb-3">Bra att veta</h3>
+      <div class="text-base text-gray-700 leading-relaxed space-y-3">
+        <p>Din arbetsgivare använder vanligtvis en tabell från Skatteverket för att beräkna den preliminära skatt som ska dras från din lön varje månad. Vid deklarationen beräknas sedan din slutgiltiga skatt, som påverkas av exempelvis ränteavdrag, försäljning av värdepapper och fastigheter.</p>
+        <p>Beräkningen ovan gäller endast för dem som ännu inte fyllt 66 år och som har en månadslön över ca 10&nbsp;000 kr.</p>
+        <p>Välj den kommun och församling där du var folkbokförd den 1 november året före inkomståret.</p>
+        <p>Statlig skatt betalas av de som beräknas tjäna över en viss summa per år. På inkomster över denna summa är den statliga skatten 20%. Läs mer på <a href="https://www.skatteverket.se" target="_blank" rel="noopener" class="text-blue-600 underline hover:text-blue-800">Skatteverkets webbplats</a>.</p>
+        <p>Begravningsavgift betalas till kommunen oavsett om du är medlem i Svenska kyrkan.</p>
+        <p>Marginalskatt är inte en faktisk skatt, utan ett mått på hur mycket skatten ändras om du får mer eller mindre i lön. Marginalskatten påverkas exempelvis av storleken på jobbskatteavdraget och statlig skatt, som båda är progressiva och alltså beror på inkomsten.</p>
+        <p>2021 infördes en ny skattereduktion på upp till 1&nbsp;500 kronor per år (&ldquo;Skattereduktion för förvärvsinkomst&rdquo;).</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="sticky bottom-0 bg-white border-t border-gray-200 px-4 py-3 text-center text-gray-500" style="font-family:'IBM Plex Mono',monospace;font-size:12px">
+    doktorn fr&aring;n skr&aring;mtr&auml;sk &middot; sepet &middot; big bengtzboe <span style="color:#F9423A">&hearts;</span>
+  </footer>
+
+  <script type="module" src="main.js?v=0.666"></script>
+</body>
+</html>

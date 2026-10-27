@@ -28,8 +28,8 @@ export default {
   // Pensionsavgift
   PENSIONSAVGIFT: 0.07,
 
-  // Moms
-  VIKTAD_MOMS: 0.19,
+  // Konsumtionsskatter (moms + punktskatter, viktad)
+  VIKTAD_MOMS: 0.2103,
 
   // Public service
   PUBLIC_SERVICE_AVGIFT: 0.01,

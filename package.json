@@ -1,6 +1,10 @@
 {
   "type": "module",
   "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1",
+    "postcss": "^8.5.28",
+    "postcss-prefix-selector": "^2.2.1",
+    "tailwindcss": "^4.2.1",
     "xlsx": "^0.18.5"
   }
 }

@@ -1,0 +1,120 @@
+/* ==========================================================================
+   CPCharts — Stacked Bar · Front-end + editor styles
+   ========================================================================== */
+
+.cpcharts-stacked-bar {
+	--cpcharts-font: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+	font-family: var(--cpcharts-font);
+	max-width: 100%;
+	margin: 1.5em 0;
+}
+
+/* ── Title ─────────────────────────────────────────────────────────── */
+
+.cpcharts-sb-title {
+	font-size: clamp(1.25rem, 3vw, 2rem);
+	font-weight: 800;
+	line-height: 1.2;
+	margin: 0 0 0.75em;
+	color: #1a1a1a;
+}
+
+/* ── Bracket annotations ──────────────────────────────────────────── */
+
+.cpcharts-sb-brackets {
+	position: relative;
+	height: 52px;
+	margin-bottom: 4px;
+}
+
+.cpcharts-sb-bracket {
+	position: absolute;
+	top: 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.cpcharts-sb-bracket-label {
+	font-size: 0.95rem;
+	font-weight: 700;
+	color: #333;
+	white-space: nowrap;
+	margin-bottom: 2px;
+}
+
+.cpcharts-sb-bracket-svg {
+	width: 100%;
+	height: 24px;
+	color: #333;
+}
+
+/* ── Bar ───────────────────────────────────────────────────────────── */
+
+.cpcharts-sb-bar {
+	display: flex;
+	overflow: hidden;
+	width: 100%;
+}
+
+.cpcharts-sb-segment {
+	height: 100%;
+	transition: width 0.3s ease;
+}
+
+/* Subtle gap between segments */
+.cpcharts-sb-segment + .cpcharts-sb-segment {
+	border-left: 1.5px solid rgba(255, 255, 255, 0.5);
+}
+
+/* ── Scale ─────────────────────────────────────────────────────────── */
+
+.cpcharts-sb-scale {
+	position: relative;
+	height: 28px;
+	margin-top: 6px;
+}
+
+.cpcharts-sb-scale-label {
+	position: absolute;
+	transform: translateX(-50%);
+	font-size: 0.85rem;
+	color: #555;
+	white-space: nowrap;
+}
+
+/* First label left-aligned, last label right-aligned */
+.cpcharts-sb-scale-label:first-child {
+	transform: none;
+}
+
+.cpcharts-sb-scale-label:last-child {
+	transform: translateX(-100%);
+}
+
+/* ── Legend ─────────────────────────────────────────────────────────── */
+
+.cpcharts-sb-legend {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1em 2em;
+	margin-top: 0.75em;
+	padding: 0 0.25em;
+}
+
+.cpcharts-sb-legend-item {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4em;
+	font-size: 0.95rem;
+	color: #333;
+	white-space: nowrap;
+}
+
+.cpcharts-sb-legend-dot {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border-radius: 50%;
+	flex-shrink: 0;
+}

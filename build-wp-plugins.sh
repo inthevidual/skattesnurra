@@ -56,6 +56,13 @@ CSS
 
   rm -f "$TMPCSS"
 
+  # ── Scope Tailwind under the container ─────────────────────────
+  # The raw build is global (.flex, .hidden, .container, :root tokens…)
+  # and, being enqueued after the theme CSS, overrides the theme's own
+  # Tailwind utilities (e.g. the header's md:flex / xl:flex). Prefix every
+  # selector with #container so nothing leaks outside the widget.
+  node "$ROOT/scripts/scope-css.mjs" "$PLUGIN_DIR/tw-raw.css" "$CONTAINER_ID"
+
   # ── Assemble scoped CSS ────────────────────────────────────────
   cat > "$PLUGIN_DIR/$NAME.css" <<CSSHEADER
 /* $NAME WordPress Plugin — scoped styles */
@@ -140,22 +147,25 @@ CSSHEADER
 /**
  * Plugin Name: ${DESCRIPTION}
  * Description: Bädda in räknesnurran med shortcode [${SHORTCODE}]
- * Version: 1.1
+ * Version: 1.3
  * Author: Skattebetalarna
  */
 
 add_shortcode('${SHORTCODE}', function () {
+    // filemtime as version → new asset URL on every deploy, busts the
+    // 30-day Loopia/browser cache on static files
+    \$dir = plugin_dir_path(__FILE__);
     wp_enqueue_style(
         '${NAME}',
         plugin_dir_url(__FILE__) . '${NAME}.css',
         [],
-        '1.1'
+        (string) filemtime(\$dir . '${NAME}.css')
     );
     wp_enqueue_script(
         '${NAME}',
         plugin_dir_url(__FILE__) . '${NAME}.js',
         [],
-        '1.1',
+        (string) filemtime(\$dir . '${NAME}.js'),
         true
     );
     return '<div id="${CONTAINER_ID}"></div>';
@@ -205,12 +215,13 @@ build_plugin "skattebetalardagen" "skattebetalardagen" "skattebetalardagen" "ska
 build_plugin "lonekostnad" "lonekostnad" "lonekostnad" "lonekostnad" "Vad kostar en anställd?"
 build_plugin "utdelning312" "utdelning312" "utdelning312" "utdelning312" "Räkna ut 3:12-utdelning"
 build_plugin "isk" "isk" "isk" "isk" "Räkna ut skatt på ISK"
+build_plugin "skattehojningar" "skattehojningar" "skattehojningar" "skattehojningar" "Så mycket höjs din skatt"
 
 echo ""
 echo "── All plugins built ─────────────────────────────────"
 echo ""
 echo "  Install: WordPress Admin → Plugins → Add New → Upload Plugin"
-echo "  Shortcodes: [fastighetsskatt]  [drivmedelsskatt]  [skattebetalardagen]  [lonekostnad]  [utdelning312]  [isk]"
+echo "  Shortcodes: [fastighetsskatt]  [drivmedelsskatt]  [skattebetalardagen]  [lonekostnad]  [utdelning312]  [isk]  [skattehojningar]"
 echo ""
 echo "  Output: $DIST/"
 ls -1 "$DIST"/*.zip 2>/dev/null | sed 's/^/    /'

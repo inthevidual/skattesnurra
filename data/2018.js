@@ -28,8 +28,8 @@ export default {
   // Pensionsavgift
   PENSIONSAVGIFT: 0.07,
 
-  // Moms
-  VIKTAD_MOMS: 0.19,
+  // Konsumtionsskatter (moms + punktskatter, viktad)
+  VIKTAD_MOMS: 0.2119,
 
   // Stockholms kommunalskattesats
   STOCKHOLMS_SKATTESATS: 0.2998,

@@ -1,2 +1,6 @@
 .venv/
 claude.md
+dist/
+node_modules/
+dist-lonefterskatt/
+dist-wordpress/

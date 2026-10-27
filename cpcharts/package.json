@@ -1,0 +1,13 @@
+{
+	"name": "cpcharts",
+	"version": "1.0.0",
+	"private": true,
+	"description": "Customisable chart blocks for WordPress",
+	"scripts": {
+		"build": "wp-scripts build --webpack-src-dir=src/blocks --output-path=build/blocks",
+		"start": "wp-scripts start --webpack-src-dir=src/blocks --output-path=build/blocks"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.0.0"
+	}
+}
